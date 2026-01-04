@@ -1,0 +1,46 @@
+/* nav.css */
+
+/* Toggler Button Customization */
+.navbar-toggler {
+  border-color: rgba(97, 17, 17, 0.5);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.5%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Link Hover Effect */
+
+
+.nav-link {
+  position: relative;
+  text-decoration: none; /* Remove default underline */
+  color: #fff; /* Change to your desired color */
+  transition: color 0.3s ease; /* For text color animation */
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px; /* Adjust the space between text and underline */
+  width: 0;
+  height: 2px; /* Thickness of the underline */
+  background-color: #ffffff; /* Color of the underline */
+  transition: width 0.3s ease-in-out; /* Animation for underline */
+}
+
+.nav-link:hover {
+  color: #ffffff; /* Change the text color on hover */
+  
+}
+
+.nav-link:hover::after {
+  width: 100%; /* Expand the underline on hover */
+}
+
+button.btn-warning:hover {
+  background-color: #ffc107;
+  color: #000;
+  box-shadow: #ccda07;
+}
