@@ -1,102 +1,123 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useGetOrdersQuery } from "../../orders/ordersApi";
+import "../../../styles/variables.css";
 
-import { useGetOrdersQuery } from "../../orders/ordersApi"; // adjust path
+// Colours tuned for white/light card background
+const STATUS_BADGE = {
+  pending:                { bg: "rgba(192,57,43,0.09)",  color: "#922B21",  border: "rgba(192,57,43,0.3)" },
+  confirmed:              { bg: "rgba(192,57,43,0.09)",  color: "#922B21",  border: "rgba(192,57,43,0.3)" },
+  in_progress:            { bg: "rgba(41,128,185,0.10)", color: "#2471A3",  border: "rgba(41,128,185,0.3)" },
+  awaiting_token_payment: { bg: "rgba(192,57,43,0.07)",  color: "#C0392B",  border: "rgba(192,57,43,0.25)" },
+  preview_submitted:      { bg: "rgba(41,128,185,0.10)", color: "#2471A3",  border: "rgba(41,128,185,0.3)" },
+  awaiting_final_payment: { bg: "rgba(192,57,43,0.07)",  color: "#C0392B",  border: "rgba(192,57,43,0.25)" },
+  completed:              { bg: "rgba(39,174,96,0.10)",  color: "#1E8449",  border: "rgba(39,174,96,0.3)" },
+  delivered:              { bg: "rgba(39,174,96,0.13)",  color: "#1A6B3C",  border: "rgba(39,174,96,0.4)" },
+};
 
-// OrdersList Component
+function StatusBadge({ status }) {
+  const s = STATUS_BADGE[status] || { bg: "rgba(0,0,0,0.05)", color: "#6B7280", border: "rgba(0,0,0,0.12)" };
+  return (
+    <span style={{
+      padding: "1.rem 0.6rem",
+      borderRadius: "var(--radius-pill)",
+      fontSize: "0.72rem",
+      fontWeight: 600,
+      background: s.bg,
+      color: s.color,
+      border: `1px solid ${s.border}`,
+      whiteSpace: "nowrap",
+    }}>
+      {status?.replace(/_/g, " ") || "unknown"}
+    </span>
+  );
+}
+
 export default function OrdersList({ onSelectOrder, selectedOrderId }) {
   const { data: orders = [], isLoading, error } = useGetOrdersQuery();
-  const navigate = useNavigate();
-  const statusColors = {
-    Completed: "bg-green-100 text-green-800",
-    "In Progress": "bg-blue-100 text-blue-800",
-    Pending: "bg-yellow-100 text-yellow-800",
-  };
-
-  const handleClick = (o) => {
-    const id = o.id ?? o._id;
-    // If parent wants callback
-    if (onSelectOrder) onSelectOrder(o);
-
-    // navigate to order details page
-    navigate(`/orders/${id}`);
-  };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-          <svg
-            className="w-5 h-5 text-red-700"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5h6M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
-        </div>
-        <h3 className="text-xl font-bold text-gray-800">Recent Orders</h3>
+    <div className="card-royal p-4 h-100">
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <h6 style={{ color: "var(--color-text-primary)", fontWeight: 700, margin: 0 }}>
+          <i className="fa-solid fa-list-check me-2" style={{ color: "var(--color-crimson)" }}></i>Recent Orders
+        </h6>
+        <Link to="/dashboard/orders" style={{ color: "var(--color-crimson)", fontSize: "0.78rem", textDecoration: "none", fontWeight: 600 }}>
+          View all <i className="fa-solid fa-arrow-right ms-1"></i>
+        </Link>
       </div>
 
-      {/* Load states */}
-      {isLoading && <p className="text-gray-600">Loading orders...</p>}
-      {error && <p className="text-red-600">Failed to load orders.</p>}
-      {!isLoading && !error && orders.length === 0 && (
-        <p className="text-gray-500">No orders placed yet.</p>
+      {isLoading && (
+        <div className="d-flex align-items-center gap-2" style={{ color: "var(--color-text-muted)", fontSize: "0.85rem" }}>
+          <div className="spinner-royal" style={{ width: 16, height: 16, borderWidth: 2 }}></div>
+          Loading orders…
+        </div>
       )}
 
-      {/* Orders */}
-      <div className="space-y-3">
-        {orders.map((o) => {
-          const id = o.id ?? o._id;
-          const status = o.status ?? o.order_status;
-          return (
-            <div
-              key={id}
-              onClick={() => handleClick(o)}
-              className={`p-4 rounded-lg border-2 cursor-pointer transition ${
-                selectedOrderId === id
-                  ? "border-red-500 bg-red-50"
-                  : "border-gray-200 hover:border-red-300 hover:bg-gray-50"
-              }`}
-            >
-              <div className="flex justify-between mb-1">
-                <span className="font-semibold text-gray-800">Order #{id}</span>
-                <span
-                  className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                    statusColors[status] || "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {status}
-                </span>
-              </div>
+      {error && (
+        <div className="alert-royal-error" style={{ fontSize: "0.83rem", padding: "0.6rem 0.9rem" }}>
+          Failed to load orders.
+        </div>
+      )}
 
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>{o.order_type}</span>
-                <span>{o.service_type}</span>
-                <span>{o.date}</span>
-              </div>
+      {!isLoading && !error && orders.length === 0 && (
+        <div className="text-center py-3">
+          <i className="fa-solid fa-inbox" style={{ color: "#CCCCCC", fontSize: "2rem", marginBottom: "0.5rem", display: "block" }}></i>
+          <p className="text-royal-muted mb-2" style={{ fontSize: "0.85rem" }}>No orders placed yet.</p>
+          <Link to="/dashboard/quote-request" className="btn-gold" style={{ textDecoration: "none", fontSize: "0.8rem", padding: "0.4rem 1.2rem" }}>
+            Get a Quote
+          </Link>
+        </div>
+      )}
 
-              {o.latex_details?.latex_title && (
-                <p className="text-sm text-gray-500 mt-1">
-                  {o.latex_details.latex_title}
-                </p>
-              )}
-              {o.data_details?.data_title && (
-                <p className="text-sm text-gray-500 mt-1">
-                  {o.data_details.data_title}
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {!isLoading && !error && orders.length > 0 && (
+        <div style={{ maxHeight: 280, overflowY: "auto", overflowX: "hidden" }}>
+          {orders.slice(0, 8).map((order) => {
+            const isSelected = selectedOrderId === order.id;
+            return (
+              <div
+                key={order.id}
+                onClick={() => onSelectOrder && onSelectOrder(order)}
+                style={{
+                  padding: "0.65rem 0.75rem",
+                  marginBottom: "0.4rem",
+                  borderRadius: "var(--radius-sm)",
+                  background: isSelected ? "rgba(192,57,43,0.07)" : "#FAFAFA",
+                  border: `1px solid ${isSelected ? "var(--color-crimson)" : "var(--color-border)"}`,
+                  cursor: "pointer",
+                  transition: "background 0.15s, border-color 0.15s",
+                }}
+                onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = "#F5F5F5"; }}
+                onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = "#FAFAFA"; }}
+              >
+                <div className="d-flex justify-content-between align-items-center">
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "var(--color-crimson)", fontWeight: 700, fontSize: "0.82rem" }}>
+                      #{order.id}
+                    </span>
+                    <span style={{
+                      padding: "0.1rem 0.45rem",
+                      borderRadius: "var(--radius-sm)",
+                      fontSize: "0.68rem",
+                      background: "rgba(192,57,43,0.07)",
+                      color: "var(--color-text-muted)",
+                      border: "1px solid var(--color-border)",
+                      textTransform: "capitalize",
+                    }}>
+                      {order.service_category?.replace(/_/g, " ") || order.order_type || "—"}
+                    </span>
+                  </div>
+                  <StatusBadge status={order.status || order.order_status} />
+                </div>
+                {order.priority && (
+                  <div style={{ marginTop: "0.25rem", color: "var(--color-text-muted)", fontSize: "0.75rem" }}>
+                    Priority: {order.priority}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

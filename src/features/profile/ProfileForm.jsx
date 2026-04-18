@@ -1,55 +1,61 @@
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { useGetProfileQuery, useUpdateProfileMutation } from "./profileApi";
+import { useEffect, useState } from "react";
+import {
+  useGetProfileQuery,
+  useCreateProfileMutation,
+  useUpdateProfileMutation,
+} from "./profileApi";
+import "../../styles/variables.css";
+
+const EMPTY_FORM = {
+  userType: "",
+  mobileNumber: "",
+  whatsappNumber: "",
+  country: "",
+  highestDegree: "",
+  institute: "",
+  company: "",
+  jobTitle: "",
+};
 
 export default function ProfileForm() {
-  // Trigger profile fetch on mount
   const {
-    isLoading: isProfileLoading,
-    isError: isProfileError,
-    error: profileError,
+    data: profileData,
+    isLoading,
     isFetching,
+    isSuccess,
+    isError,
+    error,
   } = useGetProfileQuery();
 
-  // Read normalized profile data from slice
-  const profile = useSelector((state) => state.profile.data);
-  const profileStatus = useSelector((state) => state.profile.status);
-  const profileErrorText = useSelector((state) => state.profile.error);
+  // 404 → profile doesn't exist yet → create mode
+  // 200 → profile found → update mode
+  const isCreateMode = isError && error?.status === 404;
+  const isUpdateMode = isSuccess && profileData != null;
+  const isOtherError  = isError && error?.status !== 404;
 
-  // Local form state
-  const [form, setForm] = useState({
-    userType: "",
-    designation: "",
-    mobileNumber: "",
-    whatsappNumber: "",
-    country: "",
-    highestDegree: "",
-    institute: "",
-    company: "",
-    jobTitle: "",
-  });
-
-  const [updateProfile, { isLoading: isSaving }] = useUpdateProfileMutation();
-  const [serverError, setServerError] = useState("");
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [serverError, setServerError]     = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // When profile in Redux changes, sync it into form state
+  const [createProfile, { isLoading: isCreating }] = useCreateProfileMutation();
+  const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const isSaving = isCreating || isUpdating;
+
+  // Pre-populate form when profile loads
   useEffect(() => {
-    if (profile && profileStatus === "succeeded") {
-      setForm((prev) => ({
-        ...prev,
-        userType: profile.userType || "",
-        designation: profile.designation || "",
-        mobileNumber: profile.mobileNumber || "",
-        whatsappNumber: profile.whatsappNumber || "",
-        country: profile.country || "",
-        highestDegree: profile.highestDegree || "",
-        institute: profile.institute || "",
-        company: profile.company || "",
-        jobTitle: profile.jobTitle || "",
-      }));
+    if (isUpdateMode) {
+      setForm({
+        userType:       profileData.userType       || "",
+        mobileNumber:   profileData.mobileNumber   || "",
+        whatsappNumber: profileData.whatsappNumber || "",
+        country:        profileData.country        || "",
+        highestDegree:  profileData.highestDegree  || "",
+        institute:      profileData.institute      || "",
+        company:        profileData.company        || "",
+        jobTitle:       profileData.jobTitle       || "",
+      });
     }
-  }, [profile, profileStatus]);
+  }, [isUpdateMode, profileData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,259 +68,152 @@ export default function ProfileForm() {
     e.preventDefault();
     setServerError("");
     setSuccessMessage("");
-
-    // Build partial update; only send fields we care about
-    const payload = {
-      userType: form.userType,
-      designation: form.designation,
-      mobileNumber: form.mobileNumber,
-      whatsappNumber: form.whatsappNumber,
-      country: form.country,
-      highestDegree: form.highestDegree,
-      institute: form.institute,
-      company: form.company,
-      jobTitle: form.jobTitle,
-    };
-
     try {
-      await updateProfile(payload).unwrap(); // throws on error
-      setSuccessMessage("Profile updated successfully.");
+      if (isCreateMode) {
+        await createProfile(form).unwrap();
+        setSuccessMessage("Profile created successfully.");
+      } else {
+        await updateProfile(form).unwrap();
+        setSuccessMessage("Profile updated successfully.");
+      }
     } catch (err) {
-      console.error("Failed to update profile", err);
-      const msg =
-        err?.data?.detail ||
-        err?.data?.message ||
-        err?.error ||
-        "Failed to update profile.";
-      setServerError(msg);
+      setServerError(
+        err?.data?.detail || err?.data?.message || err?.error ||
+        (isCreateMode ? "Failed to create profile." : "Failed to update profile.")
+      );
     }
   };
 
-  const loading = isProfileLoading || isFetching;
+  // ── Loading state ─────────────────────────────────────────────
+  if (isLoading || isFetching) {
+    return (
+      <div className="text-center py-4">
+        <div className="spinner-royal mx-auto"></div>
+        <p className="text-royal-muted mt-2">Loading profile…</p>
+      </div>
+    );
+  }
 
+  // ── Non-404 fetch error ───────────────────────────────────────
+  if (isOtherError) {
+    return (
+      <div className="alert-royal-error">
+        <i className="fa-solid fa-circle-exclamation me-2"></i>
+        Could not load profile. {error?.data?.detail || "Please try again later."}
+      </div>
+    );
+  }
+
+  const inputClass = "form-control form-control-royal mb-0";
+
+  // ── Form (create or update) ───────────────────────────────────
   return (
-    <div className="container mt-5">
-      <h2 className="mb-4 text-danger fw-bold">
-        <i className="fa-regular fa-id-badge me-2" />
-        My Profile
-      </h2>
-
-      {loading && <p>Loading profile...</p>}
-
-      {(isProfileError || profileErrorText) && (
-        <div className="alert alert-danger">
-          {profileErrorText ||
-            profileError?.data?.detail ||
-            profileError?.data?.message ||
-            "Failed to load profile."}
+    <form onSubmit={handleSubmit}>
+      {/* Mode indicator */}
+      <div className="d-flex align-items-center gap-2 mb-4 pb-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%",
+          background: isCreateMode ? "rgba(192,57,43,0.1)" : "rgba(39,174,96,0.1)",
+          border: `1px solid ${isCreateMode ? "rgba(192,57,43,0.3)" : "rgba(39,174,96,0.3)"}`,
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+        }}>
+          <i
+            className={`fa-solid ${isCreateMode ? "fa-user-plus" : "fa-user-pen"}`}
+            style={{ fontSize: "0.8rem", color: isCreateMode ? "var(--color-crimson)" : "#1E8449" }}
+          ></i>
         </div>
-      )}
-
-      {!loading && !isProfileError && (
-        <form onSubmit={handleSubmit}>
-          {/* User Type */}
-          <div className="mb-3">
-            <label htmlFor="userType" className="form-label">
-              User Type
-            </label>
-            <select
-              id="userType"
-              name="userType"
-              className="form-select"
-              value={form.userType}
-              onChange={handleChange}
-            >
-              <option value="">Select user type</option>
-              {/* NOTE: adjust values to match your backend choices exactly:
-                 If backend uses "reaserch" (typo), you may need value="reaserch"
-              */}
-              <option value="reaserch">Research Scholar</option>
-              <option value="corporate">Corporate Professional</option>
-            </select>
+        <div>
+          <div style={{ color: "var(--color-text-primary)", fontWeight: 600, fontSize: "0.9rem" }}>
+            {isCreateMode ? "Create Your Profile" : "Update Profile"}
           </div>
-
-          {/* Contact info */}
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label htmlFor="mobileNumber" className="form-label">
-                Mobile Number
-              </label>
-              <input
-                id="mobileNumber"
-                name="mobileNumber"
-                type="text"
-                className="form-control"
-                value={form.mobileNumber}
-                onChange={handleChange}
-                placeholder="Enter mobile number"
-              />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label htmlFor="whatsappNumber" className="form-label">
-                WhatsApp Number
-              </label>
-              <input
-                id="whatsappNumber"
-                name="whatsappNumber"
-                type="text"
-                className="form-control"
-                value={form.whatsappNumber}
-                onChange={handleChange}
-                placeholder="Enter WhatsApp number"
-              />
-            </div>
+          <div style={{ color: "var(--color-text-muted)", fontSize: "0.78rem" }}>
+            {isCreateMode
+              ? "No profile found — fill in your details below."
+              : "Your profile is set up. Edit any field and save."}
           </div>
+        </div>
+      </div>
 
-          {/* Country & Designation */}
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label htmlFor="country" className="form-label">
-                Country
-              </label>
-              <input
-                id="country"
-                name="country"
-                type="text"
-                className="form-control"
-                value={form.country}
-                onChange={handleChange}
-                placeholder="Country"
-              />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label htmlFor="designation" className="form-label">
-                Designation
-              </label>
-              <input
-                id="designation"
-                name="designation"
-                type="text"
-                className="form-control"
-                value={form.designation}
-                onChange={handleChange}
-                placeholder="e.g. PhD Scholar, Manager"
-              />
-            </div>
-          </div>
+      {/* User Type */}
+      <div className="mb-3">
+        <label className="form-label-royal">User Type</label>
+        <select
+          name="userType"
+          className="form-select form-select-royal"
+          value={form.userType}
+          onChange={handleChange}
+        >
+          <option value="">Select user type</option>
+          <option value="research">Research Scholar</option>
+          <option value="corporate">Corporate Professional</option>
+        </select>
+      </div>
 
-          {/* Student-oriented fields */}
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label htmlFor="highestDegree" className="form-label">
-                Highest Degree
-              </label>
-              <input
-                id="highestDegree"
-                name="highestDegree"
-                type="text"
-                className="form-control"
-                value={form.highestDegree}
-                onChange={handleChange}
-                placeholder="e.g. MSc, PhD"
-              />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label htmlFor="institute" className="form-label">
-                Institute
-              </label>
-              <input
-                id="institute"
-                name="institute"
-                type="text"
-                className="form-control"
-                value={form.institute}
-                onChange={handleChange}
-                placeholder="Institute / University"
-              />
-            </div>
-          </div>
+      {/* Contact */}
+      <div className="row g-3 mb-3">
+        <div className="col-sm-12 col-md-6">
+          <label className="form-label-royal">Mobile Number</label>
+          <input name="mobileNumber" type="text" className={inputClass}
+            value={form.mobileNumber} onChange={handleChange} placeholder="+91 98765 43210" />
+        </div>
+        <div className="col-sm-12 col-md-6">
+          <label className="form-label-royal">WhatsApp Number</label>
+          <input name="whatsappNumber" type="text" className={inputClass}
+            value={form.whatsappNumber} onChange={handleChange} placeholder="+91 98765 43210" />
+        </div>
+      </div>
 
-          {/* Professional fields */}
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label htmlFor="company" className="form-label">
-                Company
-              </label>
-              <input
-                id="company"
-                name="company"
-                type="text"
-                className="form-control"
-                value={form.company}
-                onChange={handleChange}
-                placeholder="Company name"
-              />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label htmlFor="jobTitle" className="form-label">
-                Job Title
-              </label>
-              <input
-                id="jobTitle"
-                name="jobTitle"
-                type="text"
-                className="form-control"
-                value={form.jobTitle}
-                onChange={handleChange}
-                placeholder="e.g. Data Scientist"
-              />
-            </div>
-          </div>
+      {/* Country */}
+      <div className="mb-3">
+        <label className="form-label-royal">Country</label>
+        <input name="country" type="text" className={inputClass}
+          value={form.country} onChange={handleChange} placeholder="e.g. India" />
+      </div>
 
-          {/* Referral / Promo codes (read-only display for now) */}
-          <div className="mb-3">
-            <label className="form-label">Referral Codes</label>
-            <div className="form-text">
-              {/* Adjust depending on what backend returns (IDs or objects) */}
-              {Array.isArray(profile.referralCodes) &&
-              profile.referralCodes.length > 0 ? (
-                <code>
-                  {profile.referralCodes
-                    .map((c) => (typeof c === "string" ? c : c.code || c.id))
-                    .join(", ")}
-                </code>
-              ) : (
-                <span>No referral codes.</span>
-              )}
-            </div>
-          </div>
+      {/* Academic */}
+      <div className="row g-3 mb-3">
+        <div className="col-sm-12 col-md-6">
+          <label className="form-label-royal">Highest Degree</label>
+          <input name="highestDegree" type="text" className={inputClass}
+            value={form.highestDegree} onChange={handleChange} placeholder="e.g. PhD, MSc" />
+        </div>
+        <div className="col-sm-12 col-md-6">
+          <label className="form-label-royal">Institute / University</label>
+          <input name="institute" type="text" className={inputClass}
+            value={form.institute} onChange={handleChange} placeholder="Institute name" />
+        </div>
+      </div>
 
-          <div className="mb-3">
-            <label className="form-label">Promotional Codes</label>
-            <div className="form-text">
-              {Array.isArray(profile.promotionalCodes) &&
-              profile.promotionalCodes.length > 0 ? (
-                <code>
-                  {profile.promotionalCodes
-                    .map((c) => (typeof c === "string" ? c : c.code || c.id))
-                    .join(", ")}
-                </code>
-              ) : (
-                <span>No promotional codes.</span>
-              )}
-            </div>
-          </div>
+      {/* Professional */}
+      <div className="row g-3 mb-4">
+        <div className="col-sm-12 col-md-6">
+          <label className="form-label-royal">Company</label>
+          <input name="company" type="text" className={inputClass}
+            value={form.company} onChange={handleChange} placeholder="Company name" />
+        </div>
+        <div className="col-sm-12 col-md-6">
+          <label className="form-label-royal">Job Title</label>
+          <input name="jobTitle" type="text" className={inputClass}
+            value={form.jobTitle} onChange={handleChange} placeholder="e.g. Data Scientist" />
+        </div>
+      </div>
 
-          {/* Result messages */}
-          {serverError && (
-            <div className="alert alert-danger">{serverError}</div>
-          )}
-          {successMessage && (
-            <div className="alert alert-success">{successMessage}</div>
-          )}
+      {serverError    && <div className="alert-royal-error mb-3">{serverError}</div>}
+      {successMessage && <div className="alert-royal-success mb-3">{successMessage}</div>}
 
-          {/* Submit */}
-          <div className="d-grid">
-            <button
-              type="submit"
-              className="btn btn-danger"
-              disabled={isSaving}
-            >
-              {isSaving ? "Saving..." : "Save Profile"}
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
+      <button type="submit" className="btn-gold w-100" disabled={isSaving}>
+        {isSaving ? (
+          <>
+            <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+            {isCreateMode ? "Creating…" : "Saving…"}
+          </>
+        ) : (
+          <>
+            <i className={`fa-solid ${isCreateMode ? "fa-user-plus" : "fa-floppy-disk"} me-2`}></i>
+            {isCreateMode ? "Create Profile" : "Save Changes"}
+          </>
+        )}
+      </button>
+    </form>
   );
 }

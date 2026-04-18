@@ -5,9 +5,7 @@ import LoginDashboard from "./LoginDashboard";
 export default function Login() {
   return (
     <>
-      <Nav />
       <LoginDashboard />
-      <Footer />
     </>
   );
 }

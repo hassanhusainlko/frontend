@@ -1,47 +1,53 @@
-import React, { useState } from "react";
-
+import { useState, useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import UserInfoCard from "./components/UserInfoCard";
 import QuoteGenerator from "./components/QuoteGenerator";
 import OrderTypeButtons from "./components/OrderTypeButtons";
 import OrdersList from "./components/OrdersList";
-// import OrderDetails from "./components/OrderDetails";
-import { useDispatch } from "react-redux";
 import { useLazyGetProfileQuery } from "../profile/profileApi";
-import { useEffect } from "react";
+import "../../styles/variables.css";
 
 export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const dispatch = useDispatch();
   const [triggerGetProfile] = useLazyGetProfileQuery();
+  const location = useLocation();
 
   useEffect(() => {
-    // Fetch user profile on dashboard load
     triggerGetProfile();
   }, [triggerGetProfile]);
+
+  const isHome = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
+
+  if (!isHome) {
+    return <Outlet />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Dashboard</h1>
-          <p className="text-gray-600">
-            Welcome back! Manage your orders and profile.
-          </p>
+    <div style={{ minHeight: "100vh", background: "#FFFFFF", paddingTop: "var(--navbar-height)" }}>
+      <div className="container py-4">
+        {/* Page title */}
+        <div className="d-flex align-items-center gap-3 mb-4">
+          <div style={{ width: 4, height: 32, background: "var(--gradient-royal)", borderRadius: 2 }}></div>
+          <h4 style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-heading)", margin: 0 }}>
+            Dashboard
+          </h4>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* LEFT: User Info */}
-          <div className="lg:col-span-1">
+        <div className="row g-4">
+          <div className="col-12 col-lg-4 col-xl-3">
             <UserInfoCard />
           </div>
-
-          {/* RIGHT: Quote + Orders */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="col-12 col-lg-8 col-xl-9">
             <QuoteGenerator />
             <OrderTypeButtons />
-            <OrdersList
-              onSelectOrder={setSelectedOrder}
-              selectedOrderId={selectedOrder?.id || null}
-            />
+            <div className="row g-3">
+              <div className="col-12">
+                <OrdersList
+                  onSelectOrder={setSelectedOrder}
+                  selectedOrderId={selectedOrder?.id || null}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

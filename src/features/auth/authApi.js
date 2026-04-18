@@ -2,14 +2,12 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { setCredentials, logout } from "./authSlice";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://127.0.0.1:8000/auth",
-
+  baseUrl: `${import.meta.env.VITE_API_URL || "http://localhost:8000"}/auth`,
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth.token;
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
-
     return headers;
   },
 });
@@ -24,20 +22,17 @@ export const authApi = createApi({
         method: "POST",
         body: credentials,
       }),
-      // On success, we want to store token + user in authSlice
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          // data should include { user, token }
           dispatch(setCredentials({ user: null, token: data.access }));
-          // Optionally persist token to localStorage (demo only)
-          localStorage.setItem("access_token", data.token);
+          localStorage.setItem("access_token", data.access);
         } catch (error) {
-          // handle error if you want to show notifications, etc.
-          console.error("Login failed: ", error);
+          console.error("Login failed:", error);
         }
       },
     }),
+
     logout: builder.mutation({
       query: () => ({
         url: "/jwt/blacklist/",
@@ -46,7 +41,6 @@ export const authApi = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           await queryFulfilled;
-          // Clear credentials from state
         } finally {
           dispatch(logout());
           localStorage.removeItem("access_token");
@@ -54,12 +48,42 @@ export const authApi = createApi({
       },
     }),
 
+    activateAccount: builder.mutation({
+      query: ({ uid, token }) => ({
+        url: "/users/activation/",
+        method: "POST",
+        body: { uid, token },
+      }),
+    }),
+
+    resetPassword: builder.mutation({
+      query: ({ email }) => ({
+        url: "/users/reset_password/",
+        method: "POST",
+        body: { email },
+      }),
+    }),
+
+    resetPasswordConfirm: builder.mutation({
+      query: ({ uid, token, new_password, re_new_password }) => ({
+        url: "/users/reset_password_confirm/",
+        method: "POST",
+        body: { uid, token, new_password, re_new_password },
+      }),
+    }),
+
     getMe: builder.query({
-      query: () => "/users/me",
+      query: () => "/users/me/",
       providesTags: ["User"],
     }),
   }),
 });
 
-export const { useLoginMutation, useLogoutMutation, useLazyGetMeQuery } =
-  authApi;
+export const {
+  useLoginMutation,
+  useLogoutMutation,
+  useActivateAccountMutation,
+  useResetPasswordMutation,
+  useResetPasswordConfirmMutation,
+  useLazyGetMeQuery,
+} = authApi;

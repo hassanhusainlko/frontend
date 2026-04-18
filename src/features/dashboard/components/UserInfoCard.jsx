@@ -1,87 +1,125 @@
-// import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-// import { useAuth } from "../../auth/useAuth.js";
-// import { useDispatch } from "react-redux";
-import { useEffect } from "react";
-// import { useLazyGetProfileQuery } from "../../profile/profileApi";
+import { Link, useNavigate } from "react-router-dom";
+import { useGetProfileQuery } from "../../profile/profileApi";
+import "../../../styles/variables.css";
 
-// UserInfoCard Component
 export default function UserInfoCard() {
   const authUser = useSelector((state) => state.auth.user);
-  const profile = useSelector((state) => state.profile.data);
+  const navigate  = useNavigate();
 
-  const fullName = `${authUser?.first_name || ""} ${
-    authUser?.last_name || ""
-  }`.trim();
+  const { data: profileData, isLoading, isError, error } = useGetProfileQuery();
+
+  // 404 → profile has never been created
+  const profileNotFound = isError && error?.status === 404;
+
+  const fullName =
+    ((authUser?.first_name || "") + " " + (authUser?.last_name || "")).trim() || "N/A";
+
+  const initials = fullName !== "N/A"
+    ? fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : "U";
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100">
-      <div className="bg-gradient-to-r from-red-700 to-red-800 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <svg
-              className="w-8 h-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </div>
-          <div className="text-white">
-            <h2 className="text-xl font-bold">{fullName || "User"}</h2>
-            <p className="text-red-100 text-sm">@{authUser?.username}</p>
-          </div>
+    <div className="card-royal p-4">
+      {/* Avatar */}
+      <div className="text-center mb-4">
+        <div style={{
+          width: 80, height: 80, borderRadius: "50%",
+          background: "var(--gradient-royal)",
+          border: "3px solid rgba(192,57,43,0.2)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 0.75rem",
+          fontSize: "1.6rem", fontWeight: 700,
+          color: "#FFFFFF",
+          fontFamily: "var(--font-heading)",
+          boxShadow: "var(--shadow-card)",
+        }}>
+          {initials}
+        </div>
+        <h6 style={{ color: "var(--color-text-primary)", fontWeight: 700, marginBottom: "0.2rem" }}>
+          {fullName}
+        </h6>
+        <div style={{ color: "var(--color-text-muted)", fontSize: "0.82rem" }}>
+          {authUser?.email || ""}
         </div>
       </div>
 
-      <div className="p-6 space-y-4">
-        <div className="space-y-3">
-          <InfoRow icon="📧" label="Email" value={authUser?.email} />
-          <InfoRow icon="📱" label="Mobile" value={profile?.mobileNumber} />
-          <InfoRow icon="🌍" label="Country" value={profile?.country} />
-          <InfoRow icon="📱" label="Whatsapp" value={profile?.whatsappNumber} />
-          <InfoRow
-            icon="🎓"
-            label="Highest Degree"
-            value={profile?.highestDegree}
-          />
-          <InfoRow icon="🏫" label="Institute" value={profile?.institute} />
-          <InfoRow icon="🏢" label="Company" value={profile?.company} />
-          <InfoRow icon="💼" label="Job Title" value={profile?.jobTitle} />
-          <InfoRow
-            icon="👤"
-            label="User Type"
-            value={profile?.userType}
-            badge
-          />
+      {/* ── Loading ── */}
+      {isLoading && (
+        <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1rem" }}>
+          <div className="d-flex align-items-center gap-2" style={{ color: "var(--color-text-muted)", fontSize: "0.83rem" }}>
+            <div className="spinner-royal" style={{ width: 16, height: 16, borderWidth: 2 }}></div>
+            Loading profile…
+          </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function InfoRow({ icon, label, value, badge }) {
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-      <div className="flex items-center gap-2 text-gray-600">
-        <span className="text-lg">{icon}</span>
-        <span className="font-medium text-sm">{label}</span>
-      </div>
-      {badge ? (
-        <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-semibold rounded-full">
-          {value || "N/A"}
-        </span>
-      ) : (
-        <span className="text-gray-800 text-sm font-medium">
-          {value || "N/A"}
-        </span>
       )}
+
+      {/* ── Profile not found → Create CTA ── */}
+      {profileNotFound && (
+        <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1rem" }}>
+          <div style={{
+            background: "rgba(192,57,43,0.05)",
+            border: "1px dashed rgba(192,57,43,0.3)",
+            borderRadius: "var(--radius-md)",
+            padding: "1rem",
+            textAlign: "center",
+            marginBottom: "1rem",
+          }}>
+            <i className="fa-solid fa-circle-user" style={{ color: "var(--color-crimson)", fontSize: "1.5rem", marginBottom: "0.5rem", display: "block" }}></i>
+            <p style={{ color: "var(--color-text-muted)", fontSize: "0.82rem", marginBottom: "0.75rem" }}>
+              Your profile is not set up yet.
+            </p>
+            <button
+              className="btn-gold w-100"
+              style={{ fontSize: "0.85rem", padding: "0.5rem 1rem" }}
+              onClick={() => navigate("/dashboard/profile")}
+            >
+              <i className="fa-solid fa-user-plus me-2"></i>Create Profile
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Profile found → Info rows ── */}
+      {!isLoading && !isError && profileData && (
+        <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1rem" }}>
+          {[
+            { label: "Email",     value: authUser?.email,                       icon: "fa-envelope" },
+            { label: "User Type", value: profileData.userType,                  icon: "fa-id-badge" },
+            { label: "Mobile",    value: profileData.mobileNumber,              icon: "fa-phone" },
+            { label: "Country",   value: profileData.country,                   icon: "fa-earth-americas" },
+          ].map(({ label, value, icon }) => (
+            <div key={label} className="d-flex align-items-start gap-2 mb-2" style={{ fontSize: "0.85rem" }}>
+              <i className={`fa-solid ${icon} mt-1`} style={{ color: "var(--color-crimson)", width: 16, flexShrink: 0 }}></i>
+              <div>
+                <div style={{ color: "var(--color-text-muted)", fontSize: "0.75rem", lineHeight: 1.2 }}>{label}</div>
+                <div style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>{value || "—"}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Action links ── */}
+      <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1rem", marginTop: "0.5rem" }} className="d-flex flex-column gap-2">
+        {[
+          { to: "/dashboard/profile", icon: "fa-user-pen",  label: profileNotFound ? "Set Up Profile" : "Edit Profile" },
+          { to: "/dashboard/coupons", icon: "fa-ticket",     label: "My Coupons" },
+          { to: "/dashboard/orders",  icon: "fa-list-check", label: "All Orders" },
+        ].map(({ to, icon, label }) => (
+          <Link key={to} to={to} style={{
+            display: "flex", alignItems: "center", gap: 8,
+            color: "var(--color-crimson)", fontSize: "0.85rem", textDecoration: "none", fontWeight: 600,
+            padding: "0.4rem 0.5rem", borderRadius: "var(--radius-sm)",
+            transition: "background 0.15s",
+          }}
+            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(192,57,43,0.07)"}
+            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+          >
+            <i className={`fa-solid ${icon}`} style={{ width: 16 }}></i> {label}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

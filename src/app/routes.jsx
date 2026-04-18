@@ -2,7 +2,6 @@ import React, { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { PublicRoutes } from "../routes/publicRoutes.jsx";
 import { DashboardRoutes } from "../routes/dashboardRoutes.jsx";
-import CreateLatexOrder from "../features/orders/CreateLatexOrder.jsx";
 
 export default function AppRoutes() {
   return (

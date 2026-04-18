@@ -1,19 +1,12 @@
-// src/features/quotes/quoteApi.js
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import {
-  setQuote,
-  setQuoteStatus,
-  setQuoteError,
-} from "./quoteSlice";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "/api", // adjust if your backend root is different
+  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000",
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth?.token;
     if (token) {
-      headers.set("authorization", `Bearer ${token}`);
+      headers.set("Authorization", `Bearer ${token}`);
     }
-    headers.set("Content-Type", "application/json");
     return headers;
   },
 });
@@ -21,43 +14,45 @@ const baseQuery = fetchBaseQuery({
 export const quoteApi = createApi({
   reducerPath: "quoteApi",
   baseQuery,
+  tagTypes: ["Quotes"],
   endpoints: (builder) => ({
-    generateQuote: builder.mutation({
-      /*
-        payload should look like:
-        {
-          service_type: "standard" | "urgent",
-          pages: number
-        }
-      */
+    // Step 1 — POST /quotes/request-quote/
+    requestQuote: builder.mutation({
       query: (payload) => ({
-        url: "/genrate-quot/",  // 👈 as you specified
+        url: "/quotes/request-quote/",
         method: "POST",
         body: payload,
+        headers: { "Content-Type": "application/json" },
       }),
-      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        try {
-          dispatch(setQuoteStatus("loading"));
-          const { data } = await queryFulfilled;
-          // e.g. data = { amount: 1200, currency: "INR", ... }
-          dispatch(setQuote(data));
-          dispatch(setQuoteStatus("succeeded"));
-          dispatch(setQuoteError(null));
-        } catch (err) {
-          console.error("Generate quote failed:", err);
-          dispatch(setQuoteStatus("failed"));
-          dispatch(
-            setQuoteError(
-              err?.data?.detail ||
-                err?.data?.message ||
-                err?.error ||
-                "Failed to generate quote"
-            )
-          );
-        }
+      invalidatesTags: ["Quotes"],
+    }),
+
+    // Step 2 — POST /quotes/{id}/upload-file/ (multipart)
+    uploadQuoteFile: builder.mutation({
+      query: ({ quoteId, file }) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return {
+          url: `/quotes/${quoteId}/upload-file/`,
+          method: "POST",
+          body: formData,
+        };
       },
+    }),
+
+    // Step 3 — POST /quotes/{id}/accept/ → returns { order_id }
+    acceptQuote: builder.mutation({
+      query: (quoteId) => ({
+        url: `/quotes/${quoteId}/accept/`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Quotes"],
     }),
   }),
 });
 
-export const { useGenerateQuoteMutation } = quoteApi;
+export const {
+  useRequestQuoteMutation,
+  useUploadQuoteFileMutation,
+  useAcceptQuoteMutation,
+} = quoteApi;

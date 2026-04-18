@@ -1,188 +1,141 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useSelector } from "react-redux";
+import "../../styles/variables.css";
 
 export default function Quote() {
-  const [quote, setQuote] = useState({
-    documentType: "",
-    serviceType: "",
-    pages: "",
-  });
-  const [cardValue, setCardValue] = useState({ price: 0, days: 0 });
-  const [showCard, setShowCard] = useState(false);
+  const token = useSelector((state) => state.auth.token);
+
+  const [form, setForm] = useState({ documentType: "", serviceType: "", pages: "" });
+  const [result, setResult] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setQuote((prev) => ({ ...prev, [name]: value }));
+    setForm((s) => ({ ...s, [name]: value }));
+    setResult(null);
   };
 
-  const handleSubmit = () => {
-    const { documentType, serviceType, pages } = quote;
-    const pagesNum = Number(pages);
-    if (!documentType || !serviceType || !pagesNum || pagesNum <= 0) {
-      // simple guard — you can replace with better validation/UI
-      alert(
-        "Please select document type, service type and enter a valid number of pages."
-      );
-      return;
-    }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const pages = Number(form.pages);
+    if (!form.documentType || !form.serviceType || !pages) return;
 
-    let calculatedPrice = 0;
-    let expectedDays = 0;
-
-    // current business logic preserved; adjust multipliers as needed
-    if (documentType === "Thesis" && serviceType === "Urgent") {
-      calculatedPrice = pagesNum * 10;
-      expectedDays = pagesNum * 2;
-    } else if (documentType === "Thesis" && serviceType === "Regular") {
-      calculatedPrice = pagesNum * 5;
-      expectedDays = pagesNum * 4;
-    } else {
-      // fallback (e.g., Research Paper, Dissertation) — example logic
-      if (serviceType === "Urgent") {
-        calculatedPrice = pagesNum * 6;
-        expectedDays = Math.max(1, Math.ceil(pagesNum / 2));
-      } else {
-        calculatedPrice = pagesNum * 3;
-        expectedDays = Math.max(2, Math.ceil(pagesNum / 1.5));
-      }
-    }
-
-    setCardValue({ price: calculatedPrice, days: expectedDays });
-    setShowCard(true);
+    const multiplier = form.serviceType === "Urgent" ? 10 : 5;
+    const daysMultiplier = form.serviceType === "Urgent" ? 2 : 4;
+    setResult({ price: pages * multiplier, days: pages * daysMultiplier });
   };
+
+  const selectClass = "form-select form-select-royal";
+  const inputClass = "form-control form-control-royal";
 
   return (
-    <div className="w-full px-4 md:px-8 mb-8">
-      <h4 className="text-xl font-semibold mt-6 mb-6 flex items-center">
-        <i className="fa-solid fa-check-to-slot mr-2" /> Referral Program
-      </h4>
-
-      <form
-        onSubmit={(e) => e.preventDefault()}
-        className="grid grid-cols-1 gap-4 md:grid-cols-4 items-end"
-      >
-        {/* Document Type */}
-        <div>
-          <label
-            htmlFor="documentType"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Document Type
-          </label>
-          <select
-            id="documentType"
-            name="documentType"
-            value={quote.documentType}
-            onChange={handleChange}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
-          >
-            <option value="">Choose...</option>
-            <option value="Research Paper">Research Paper</option>
-            <option value="Thesis">Thesis</option>
-            <option value="Dissertation">Dissertation</option>
-          </select>
-        </div>
-
-        {/* Service Type */}
-        <div>
-          <label
-            htmlFor="serviceType"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Service Type
-          </label>
-          <select
-            id="serviceType"
-            name="serviceType"
-            value={quote.serviceType}
-            onChange={handleChange}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
-          >
-            <option value="">Choose...</option>
-            <option value="Regular">Regular</option>
-            <option value="Urgent">Urgent</option>
-          </select>
-        </div>
-
-        {/* Number of Pages */}
-        <div>
-          <label
-            htmlFor="pages"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Number of Pages
-          </label>
-          <input
-            id="pages"
-            name="pages"
-            type="number"
-            min="1"
-            value={quote.pages}
-            onChange={handleChange}
-            placeholder="e.g. 12"
-            className="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
-          />
-        </div>
-
-        {/* Submit */}
-        <div>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="w-full rounded-md bg-red-600 text-white py-2 px-4 font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-200"
-          >
-            Submit
-          </button>
-        </div>
-      </form>
-
-      {/* Result Card */}
-      {showCard && (
-        <motion.div
-          className="max-w-2xl mx-auto mt-6 rounded-xl shadow-md overflow-hidden"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
-        >
-          <div className="bg-white p-6">
-            <div className="text-sm text-gray-500 mb-2">
-              Priority Type: {quote.serviceType}
-            </div>
-            <h5 className="text-lg font-semibold mb-2">
-              Document Type: {quote.documentType}
-            </h5>
-            <p className="text-gray-700 mb-4">
-              Number of Pages:{" "}
-              <span className="font-medium">{quote.pages}</span>
-              <br />
-              Price: <span className="font-medium">₹{cardValue.price}</span>
-            </p>
-
-            <div className="flex gap-3">
-              <Link
-                to="/home/place-order"
-                className="inline-block rounded-md bg-indigo-600 text-white px-4 py-2 text-sm font-medium hover:bg-indigo-700"
-              >
-                Create Order
-              </Link>
-
-              <button
-                type="button"
-                onClick={() => setShowCard(false)}
-                className="inline-block rounded-md border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
-              >
-                Close
-              </button>
-            </div>
+    <section id="quote" className="section-royal">
+      <div className="container">
+        <div className="text-center mb-5">
+          <div className="d-flex align-items-center justify-content-center gap-3 mb-2">
+            <div style={{ flex: 1, height: 1, background: "var(--color-border)" }}></div>
+            <h2 className="section-heading-gold mb-0">Instant Quote Estimate</h2>
+            <div style={{ flex: 1, height: 1, background: "var(--color-border)" }}></div>
           </div>
+          <p className="text-royal-muted">
+            Get a quick price estimate. For an exact quote, use our full quote request form.
+          </p>
+        </div>
 
-          <div className="bg-gray-50 px-6 py-3 text-sm text-gray-600">
-            Expected Delivery Time:{" "}
-            <span className="font-medium">{cardValue.days}</span> Business Days
-          </div>
-        </motion.div>
-      )}
-    </div>
+        <div className="card-royal p-4 p-md-5" style={{ maxWidth: 860, margin: "0 auto" }}>
+          <form onSubmit={handleSubmit}>
+            <div className="row g-3 align-items-end">
+              <div className="col-12 col-sm-6 col-lg-3">
+                <label className="form-label-royal">Document Type</label>
+                <select name="documentType" className={selectClass} value={form.documentType} onChange={handleChange}>
+                  <option value="">Select type</option>
+                  <option>Research Paper</option>
+                  <option>Thesis</option>
+                  <option>Dissertation</option>
+                </select>
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <label className="form-label-royal">Service Type</label>
+                <select name="serviceType" className={selectClass} value={form.serviceType} onChange={handleChange}>
+                  <option value="">Select priority</option>
+                  <option>Regular</option>
+                  <option>Urgent</option>
+                </select>
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <label className="form-label-royal">Number of Pages</label>
+                <input type="number" name="pages" min="1" className={inputClass}
+                  placeholder="e.g. 15" value={form.pages} onChange={handleChange} />
+              </div>
+              <div className="col-12 col-sm-6 col-lg-3">
+                <button type="submit" className="btn-gold w-100">
+                  <i className="fa-solid fa-calculator me-2"></i>Calculate
+                </button>
+              </div>
+            </div>
+          </form>
+
+          {result && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="mt-4 p-4"
+              style={{
+                background: "var(--gradient-royal)",
+                borderRadius: "var(--radius-md)",
+                border: "1px solid rgba(255,255,255,0.15)",
+              }}
+            >
+              <div className="row g-3 align-items-center">
+                <div className="col-12 col-md-8">
+                  <div className="d-flex gap-4 flex-wrap">
+                    <div>
+                      <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.78rem" }}>Document Type</div>
+                      <div style={{ color: "#FFFFFF", fontWeight: 600 }}>{form.documentType}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.78rem" }}>Priority</div>
+                      <div style={{ color: "#FFFFFF", fontWeight: 600 }}>{form.serviceType}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.78rem" }}>Est. Price</div>
+                      <div style={{ color: "#FFFFFF", fontWeight: 700, fontSize: "1.1rem" }}>₹{result.price}</div>
+                    </div>
+                    <div>
+                      <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.78rem" }}>Delivery</div>
+                      <div style={{ color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>{result.days} Business Days</div>
+                    </div>
+                  </div>
+                  <p style={{ color: "rgba(255,255,255,0.65)", marginBottom: 0, marginTop: "0.5rem", fontSize: "0.78rem" }}>
+                    * This is a rough estimate. For exact pricing, use the full quote request.
+                  </p>
+                </div>
+                <div className="col-12 col-md-4 text-md-end">
+                  <Link
+                    to={token ? "/dashboard/quote-request" : "/register"}
+                    style={{
+                      textDecoration: "none",
+                      display: "inline-block",
+                      background: "#FFFFFF",
+                      color: "var(--color-crimson)",
+                      fontWeight: 700,
+                      padding: "0.6rem 1.6rem",
+                      borderRadius: "var(--radius-pill)",
+                      fontSize: "0.9rem",
+                      transition: "box-shadow var(--transition-fast)",
+                    }}
+                  >
+                    <i className="fa-solid fa-arrow-right me-2"></i>
+                    {token ? "Request Full Quote" : "Get Started"}
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

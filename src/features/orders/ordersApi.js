@@ -6,13 +6,13 @@ import {
   addOrder,
   updateOrder,
 } from "./orderSlice";
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/";
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: API_BASE + "/store", // adjust to your backend root if needed
+  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000",
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth?.token;
     if (token) {
-      headers.set("authorization", `Bearer ${token}`);
+      headers.set("Authorization", `Bearer ${token}`);
     }
     return headers;
   },
@@ -23,18 +23,9 @@ export const ordersApi = createApi({
   baseQuery,
   tagTypes: ["Orders"],
   endpoints: (builder) => ({
-    // ---------- GET list of orders ----------
-    /**
-     * orderType:
-     *  - "all" or undefined → /orders/
-     *  - "latex" → /orders/?order_type=latex
-     *  - "data_analysis" → /orders/?order_type=data_analysis
-     */
+    // GET /orders/orders/
     getOrders: builder.query({
-      query: () => {
-        console.log("API_BASE:", API_BASE);
-        return "/orders";
-      },
+      query: () => "/orders/orders/",
       providesTags: (result) =>
         result && Array.isArray(result)
           ? [
@@ -50,29 +41,23 @@ export const ordersApi = createApi({
           dispatch(setOrdersStatus("succeeded"));
           dispatch(setOrdersError(null));
         } catch (err) {
-          console.error("Failed to load orders:", err);
           dispatch(setOrdersStatus("failed"));
           dispatch(
             setOrdersError(
-              err?.data?.detail ||
-                err?.data?.message ||
-                err?.error ||
-                "Failed to load orders"
+              err?.data?.detail || err?.data?.message || "Failed to load orders"
             )
           );
         }
       },
     }),
 
-    // ---------- GET single order by id ----------
+    // GET /orders/orders/{id}/
     getOrder: builder.query({
-      query: (id) => `/orders/${id}/`,
+      query: (id) => `/orders/orders/${id}/`,
       providesTags: (result, error, id) => [{ type: "Orders", id }],
       async onQueryStarted(id, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          console.log(`This is order: ${data}`);
-          // keep slice in sync too (optional)
           dispatch(updateOrder(data));
         } catch (err) {
           console.error("Failed to load order:", err);
@@ -80,132 +65,83 @@ export const ordersApi = createApi({
       },
     }),
 
-    // ---------- CREATE LaTeX Order ----------
-    createLatexOrder: builder.mutation({
-      /*
-        payload:
-        {
-          serviceType: "standard" | "urgent",
-          latexType: "pdf_to_latex" | "word_to_latex" | "editable_pdf_to_latex",
-          sourceFile: File,
-          additionalNotes: string,
-        }
-        (you can add coupon or more fields later)
-      */
-      query: (payload) => {
-        const formData = new FormData();
-
-        // Base order fields
-        formData.append("order_type", "latex");
-        if (payload.serviceType) {
-          formData.append("service_type", payload.serviceType);
-        }
-
-        // Nested latex_details fields
-        if (payload.latexType) {
-          formData.append("latex_details.latex_type", payload.latexType);
-        }
-        if (payload.additionalNotes) {
-          formData.append(
-            "latex_details.additional_notes",
-            payload.additionalNotes
-          );
-        }
-        if (payload.sourceFile) {
-          formData.append("latex_details.source_file", payload.sourceFile);
-        }
-        if (payload.appliedCoupon) {
-          formData.append(
-            "latex_details.applied_coupon",
-            payload.appliedCoupon
-          );
-        }
-
-        return {
-          url: "/orders/",
-          method: "POST",
-          body: formData,
-        };
-      },
+    // POST /orders/orders/
+    createOrder: builder.mutation({
+      query: ({ service_category, priority = "standard" }) => ({
+        url: "/orders/orders/",
+        method: "POST",
+        body: { service_category, priority },
+        headers: { "Content-Type": "application/json" },
+      }),
       invalidatesTags: [{ type: "Orders", id: "LIST" }],
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
           dispatch(addOrder(data));
         } catch (err) {
-          console.error("Failed to create LaTeX order:", err);
+          console.error("Failed to create order:", err);
         }
       },
     }),
 
-    // ---------- CREATE Data Analysis Order ----------
-    createDataAnalysisOrder: builder.mutation({
-      /*
-        payload:
-        {
-          serviceType: "standard" | "urgent",
-          dataType: string,
-          mainDocument: File,
-          supportingDocument?: File,
-          additionalNotes?: string,
-          appliedCoupon?: string | number,
-        }
-
-        Backend expects nested key: data_analysis_details.*
-      */
-      query: (payload) => {
+    // POST /orders/orders/{id}/upload-file/
+    uploadOrderFile: builder.mutation({
+      query: ({ orderId, file, file_type = "client_main_file" }) => {
         const formData = new FormData();
-
-        // Base order fields
-        formData.append("order_type", "data_analysis");
-        if (payload.serviceType) {
-          formData.append("service_type", payload.serviceType);
-        }
-
-        // Nested data_analysis_details fields
-        if (payload.dataType) {
-          formData.append("data_analysis_details.data_type", payload.dataType);
-        }
-        if (payload.additionalNotes) {
-          formData.append(
-            "data_analysis_details.additional_notes",
-            payload.additionalNotes
-          );
-        }
-        if (payload.mainDocument) {
-          formData.append(
-            "data_analysis_details.main_document",
-            payload.mainDocument
-          );
-        }
-        if (payload.supportingDocument) {
-          formData.append(
-            "data_analysis_details.supporting_document",
-            payload.supportingDocument
-          );
-        }
-        if (payload.appliedCoupon) {
-          formData.append(
-            "data_analysis_details.applied_coupon",
-            payload.appliedCoupon
-          );
-        }
-
+        formData.append("file", file);
+        formData.append("file_type", file_type);
         return {
-          url: "/orders/",
+          url: `/orders/orders/${orderId}/upload-file/`,
           method: "POST",
           body: formData,
         };
       },
-      invalidatesTags: [{ type: "Orders", id: "LIST" }],
-      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        try {
-          const { data } = await queryFulfilled;
-          dispatch(addOrder(data));
-        } catch (err) {
-          console.error("Failed to create Data Analysis order:", err);
-        }
-      },
+      invalidatesTags: (result, error, { orderId }) => [
+        { type: "Orders", id: orderId },
+      ],
+    }),
+
+    // POST /orders/orders/{id}/request-revision/
+    requestRevision: builder.mutation({
+      query: ({ orderId, message }) => ({
+        url: `/orders/orders/${orderId}/request-revision/`,
+        method: "POST",
+        body: { message },
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: (result, error, { orderId }) => [
+        { type: "Orders", id: orderId },
+      ],
+    }),
+
+    // POST /orders/orders/{id}/approve-preview/
+    approvePreview: builder.mutation({
+      query: (orderId) => ({
+        url: `/orders/orders/${orderId}/approve-preview/`,
+        method: "POST",
+      }),
+      invalidatesTags: (result, error, orderId) => [
+        { type: "Orders", id: orderId },
+      ],
+    }),
+
+    // PATCH /orders/orders/{id}/
+    updateOrderDetails: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/orders/orders/${id}/`,
+        method: "PATCH",
+        body,
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: "Orders", id }],
+    }),
+
+    // GET /orders/orders/{id}/status-history/
+    getStatusHistory: builder.query({
+      query: (orderId) => `/orders/orders/${orderId}/status-history/`,
+      providesTags: (result, error, orderId) => [
+        { type: "Orders", id: `${orderId}-history` },
+      ],
     }),
   }),
 });
@@ -213,7 +149,10 @@ export const ordersApi = createApi({
 export const {
   useGetOrdersQuery,
   useGetOrderQuery,
-  useLazyGetOrderQuery,
-  useCreateLatexOrderMutation,
-  useCreateDataAnalysisOrderMutation,
+  useCreateOrderMutation,
+  useUploadOrderFileMutation,
+  useRequestRevisionMutation,
+  useApprovePreviewMutation,
+  useGetStatusHistoryQuery,
+  useUpdateOrderDetailsMutation,
 } = ordersApi;

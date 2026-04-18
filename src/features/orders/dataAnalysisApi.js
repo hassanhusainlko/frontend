@@ -1,20 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import {
-  addDataAnalysisOrder,
-  setDataAnalysisStatus,
-  setDataAnalysisError,
-  resetDataAnalysisForm,
-} from "./dataAnalysisSlice";
-const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: API_BASE + "/store", // adjust to your backend root, e.g. "/api"
+  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:8000",
   prepareHeaders: (headers, { getState }) => {
     const token = getState().auth?.token;
     if (token) {
-      headers.set("authorization", `Bearer ${token}`);
+      headers.set("Authorization", `Bearer ${token}`);
     }
-    // Don't set Content-Type here for FormData; browser will set boundary
     return headers;
   },
 });
@@ -22,82 +14,49 @@ const baseQuery = fetchBaseQuery({
 export const dataAnalysisApi = createApi({
   reducerPath: "dataAnalysisApi",
   baseQuery,
-  tagTypes: ["DataAnalysisOrders"],
+  tagTypes: ["DataAnalysisDetails"],
   endpoints: (builder) => ({
-    // POST /api/orders/  → creates an Order + DataAnalysisOrder child
-    createDataAnalysisOrder: builder.mutation({
-      query: (payload) => {
-        const formData = new FormData();
+    // POST /orders/data-analysis/
+    createDataAnalysisDetails: builder.mutation({
+      query: (payload) => ({
+        url: "/orders/data-analysis/",
+        method: "POST",
+        body: {
+          order: payload.order,
+          data_type: payload.data_type,
+          analysis_objective: payload.analysis_objective,
+          charts_required: payload.charts_required || "yes",
+          report_format: payload.report_format || "pdf",
+          additional_notes: payload.additional_notes || "",
+        },
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: ["DataAnalysisDetails"],
+    }),
 
-        // Base Order fields
-        formData.append("order_type", "data_analysis"); // maps to Order.order_type
-        formData.append("service_type", payload.serviceType); // maps to Order.service_type
+    // GET /orders/data-analysis/by-order/{order_id}/
+    getDataAnalysisByOrder: builder.query({
+      query: (orderId) => `/orders/data-analysis/by-order/${orderId}/`,
+      providesTags: (result, error, orderId) => [
+        { type: "DataAnalysisDetails", id: orderId },
+      ],
+    }),
 
-        // Nested DataAnalysisOrder fields
-        if (payload.dataTitle) {
-          formData.append("data_details.data_title", payload.dataTitle);
-        }
-        if (payload.dataObjective) {
-          formData.append("data_details.data_objective", payload.dataObjective);
-        }
-        if (payload.dataType) {
-          formData.append("data_details.data_type", payload.dataType);
-        }
-        if (payload.additionalNotes) {
-          formData.append(
-            "data_details.additional_notes",
-            payload.additionalNotes
-          );
-        }
-        if (payload.appliedCoupon) {
-          formData.append("data_details.applied_coupon", payload.appliedCoupon);
-        }
-
-        // Files
-        if (payload.mainDocument) {
-          formData.append("data_details.main_document", payload.mainDocument);
-        }
-        if (payload.supportingDocument) {
-          formData.append(
-            "data_details.supporting_document",
-            payload.supportingDocument
-          );
-        }
-
-        return {
-          url: "/orders/",
-          method: "POST",
-          body: formData,
-        };
-      },
-
-      invalidatesTags: ["DataAnalysisOrders"],
-
-      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        try {
-          dispatch(setDataAnalysisStatus("loading"));
-          const { data } = await queryFulfilled;
-
-          // data = newly created Order (with nested data_details, depending on your serializer)
-          dispatch(addDataAnalysisOrder(data));
-          dispatch(setDataAnalysisStatus("succeeded"));
-          dispatch(setDataAnalysisError(null));
-          dispatch(resetDataAnalysisForm());
-        } catch (err) {
-          console.error("Failed to create data analysis order:", err);
-          dispatch(setDataAnalysisStatus("failed"));
-          dispatch(
-            setDataAnalysisError(
-              err?.data?.detail ||
-                err?.data?.message ||
-                err?.error ||
-                "Failed to create data analysis order"
-            )
-          );
-        }
-      },
+    // PATCH /orders/data-analysis/{id}/
+    updateDataAnalysisDetails: builder.mutation({
+      query: ({ id, ...patch }) => ({
+        url: `/orders/data-analysis/${id}/`,
+        method: "PATCH",
+        body: patch,
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: ["DataAnalysisDetails"],
     }),
   }),
 });
 
-export const { useCreateDataAnalysisOrderMutation } = dataAnalysisApi;
+export const {
+  useCreateDataAnalysisDetailsMutation,
+  useGetDataAnalysisByOrderQuery,
+  useUpdateDataAnalysisDetailsMutation,
+} = dataAnalysisApi;

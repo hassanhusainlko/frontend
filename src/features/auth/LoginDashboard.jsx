@@ -1,23 +1,26 @@
-import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-// import { useAuth } from "../../contexts/AuthContext";
+import { useState } from "react";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useLoginMutation, useLazyGetMeQuery } from "./authApi";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "./authSlice";
+import "../../styles/variables.css";
 
 export default function LoginDashboard() {
-  // const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
 
-  const [login, { isLoading }] = useLoginMutation();
+  const registered = searchParams.get("registered") === "1";
+  const passwordReset = searchParams.get("reset") === "1";
+
+  const [loginMutation, { isLoading }] = useLoginMutation();
   const [getMe] = useLazyGetMeQuery();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState(null);
 
-  // the route the user tried to visit before login
   const from = location.state?.from?.pathname || "/dashboard";
 
   const handleSubmit = async (e) => {
@@ -30,109 +33,161 @@ export default function LoginDashboard() {
     }
 
     try {
-      const loginRes = await login({ email, password }).unwrap(); // ← Calling AuthProvider login()
-      // 2) Fetch current user using getMe
-      const me = await getMe().unwrap(); // calls GET /users/me
-
-      dispatch(setCredentials({ user: me, token: loginRes.access }));
+      const loginRes = await loginMutation({ email, password }).unwrap();
+      try {
+        const me = await getMe().unwrap();
+        dispatch(setCredentials({ user: me, token: loginRes.access }));
+      } catch {
+        dispatch(setCredentials({ user: null, token: loginRes.access }));
+      }
       navigate(from, { replace: true });
     } catch (err) {
       const message =
-        err?.data?.message || err?.data?.detail || "Invalid email or password.";
+        err?.data?.detail ||
+        err?.data?.non_field_errors?.[0] ||
+        err?.data?.message ||
+        "Invalid email or password.";
       setError(message);
     }
   };
 
   return (
-    <>
-      <h2
-        style={{
-          marginTop: "8rem",
-          color: "#b01a35",
-          fontSize: "30px",
-          fontWeight: "700",
-        }}
-      >
-        <i className="fa-regular fa-circle-user ms-5 pe-3"></i>Login
-      </h2>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-card-header">
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "var(--gradient-royal)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 1rem",
+              boxShadow: "var(--shadow-card)",
+            }}
+          >
+            <i className="fa-regular fa-circle-user" style={{ color: "#FFFFFF", fontSize: "1.75rem" }}></i>
+          </div>
+          <h2>Welcome Back</h2>
+          <p>Sign in to your TexScript account</p>
+        </div>
 
-      <div className="container mt-5">
-        <div className="col-sm-12 col-md-4 offset-md-4">
-          <div className="card shadow">
-            <div className="card-body">
-              <form onSubmit={handleSubmit} noValidate>
-                {/* Email */}
-                <div className="mb-3">
-                  <label htmlFor="emailInput" className="form-label">
-                    <i className="fa-regular fa-envelope pe-2"></i>Email address
-                  </label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="emailInput"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
-                    required
-                  />
-                </div>
+        {/* Post-registration notice */}
+        {registered && (
+          <div className="alert-royal-info mb-3">
+            <i className="fa-solid fa-envelope-circle-check me-2"></i>
+            Account created! Please check your email to activate your account before logging in.
+          </div>
+        )}
 
-                {/* Password */}
-                <div className="mb-3">
-                  <label htmlFor="passwordInput" className="form-label">
-                    <i className="fa-solid fa-unlock pe-2"></i>Password
-                  </label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="passwordInput"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    required
-                  />
-                  <Link
-                    to="/forgot-password"
-                    className="form-text text-danger text-end d-block mt-2 text-decoration-none"
-                  >
-                    Forgot Password?
-                  </Link>
-                </div>
+        {/* Post-reset notice */}
+        {passwordReset && (
+          <div className="alert-royal-success mb-3">
+            <i className="fa-solid fa-check-circle me-2"></i>
+            Password reset successful! You can now log in with your new password.
+          </div>
+        )}
 
-                {/* Error message */}
-                {error && (
-                  <div className="alert alert-danger py-2">{error}</div>
-                )}
+        <form onSubmit={handleSubmit} noValidate>
+          {/* Email */}
+          <div className="mb-3">
+            <label className="form-label-royal">
+              <i className="fa-regular fa-envelope pe-2"></i>Email Address
+            </label>
+            <input
+              type="email"
+              className="form-control form-control-royal"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
+          </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  className="btn btn-danger fw-semibold fs-6 px-4"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Logging in..." : "LOGIN"}
-                  <i className="fa-regular fa-paper-plane ps-2"></i>
-                </button>
-              </form>
-
-              {/* Register Link */}
-              <div className="mt-4">
-                <div className="card-body text-center p-1 bg-secondary-subtle shadow-sm rounded-pill">
-                  New User?
-                  <Link
-                    to="/register"
-                    className="text-danger text-decoration-none ps-1"
-                  >
-                    Register Here
-                  </Link>
-                </div>
-              </div>
+          {/* Password */}
+          <div className="mb-1">
+            <label className="form-label-royal">
+              <i className="fa-solid fa-lock pe-2"></i>Password
+            </label>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPw ? "text" : "password"}
+                className="form-control form-control-royal"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+                style={{ paddingRight: "2.6rem" }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                tabIndex={-1}
+                style={{
+                  position: "absolute", right: 10, top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "var(--color-text-muted)", padding: "0 2px",
+                  lineHeight: 1,
+                }}
+                aria-label={showPw ? "Hide password" : "Show password"}
+              >
+                <i className={`fa-solid ${showPw ? "fa-eye-slash" : "fa-eye"}`}></i>
+              </button>
             </div>
           </div>
-        </div>
+
+          <div className="text-end mb-3">
+            <Link
+              to="/forgot-password"
+              className="text-decoration-none"
+              style={{ fontSize: "0.85rem", color: "var(--color-gold)" }}
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
+          {error && (
+            <div className="alert-royal-error mb-3">{error}</div>
+          )}
+
+          <button
+            type="submit"
+            className="btn-gold w-100 mb-3"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                Signing In...
+              </>
+            ) : (
+              <>
+                <i className="fa-regular fa-paper-plane me-2"></i>Sign In
+              </>
+            )}
+          </button>
+
+          <div
+            className="text-center py-2 px-3"
+            style={{
+              background: "rgba(0,0,0,0.04)",
+              borderRadius: "var(--radius-pill)",
+              color: "var(--color-text-muted)",
+              fontSize: "0.9rem",
+            }}
+          >
+            New to TexScript?{" "}
+            <Link to="/register" className="text-gold text-decoration-none fw-semibold">
+              Create Account
+            </Link>
+          </div>
+        </form>
       </div>
-    </>
+    </div>
   );
 }

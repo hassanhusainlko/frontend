@@ -1,107 +1,83 @@
+import "../../styles/variables.css";
+
 export default function DeliveryTimeTable() {
   return (
-    <>
-      <div className="w-full mb-8 px-4 md:px-8">
-        <h4 className="text-xl font-bold mt-6 mb-6 flex items-center">
-          <i className="fa-solid fa-check-to-slot mr-2"></i>
-          Delivery Time We Offer
-        </h4>
+    <section className="section-royal-alt">
+      <div className="container">
+        <div className="text-center mb-4">
+          <div className="d-flex align-items-center justify-content-center gap-3 mb-2">
+            <div style={{ flex: 1, height: 1, background: "var(--color-border)" }}></div>
+            <h2 className="section-heading-gold mb-0">Delivery Times</h2>
+            <div style={{ flex: 1, height: 1, background: "var(--color-border)" }}></div>
+          </div>
+          <p className="text-royal-muted">Transparent timelines for every service type.</p>
+        </div>
 
-        {/* Table Wrapper */}
-        <div className="overflow-x-auto bg-white rounded-xl shadow-md p-4">
-          <table className="w-full border border-gray-300 text-center text-sm md:text-base">
-            <thead className="bg-gray-100">
-              <tr className="font-semibold text-gray-700">
-                <th className="border border-gray-300 p-3"></th>
-                <th className="border border-gray-300 p-3">Number of Pages</th>
-                <th className="border border-gray-300 p-3">Priority</th>
-                <th className="border border-gray-300 p-3">Delivery Time*</th>
-                <th className="border border-gray-300 p-3">Number of Pages</th>
-                <th className="border border-gray-300 p-3">Delivery Time*</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {/* Normal Days */}
-              <tr>
-                <td
-                  rowSpan="2"
-                  className="border border-gray-300 p-3 align-middle"
-                >
-                  During Normal Days
-                </td>
-
-                <td
-                  rowSpan="4"
-                  className="border border-gray-300 p-3 align-middle"
-                >
-                  Up to 30 Pages
-                </td>
-
-                <td className="border border-gray-300 p-3">Regular</td>
-                <td className="border border-gray-300 p-3">
-                  3-4 Business Days
-                </td>
-
-                <td
-                  rowSpan="4"
-                  className="border border-gray-300 p-3 align-middle"
-                >
-                  More than 30
-                </td>
-
-                <td
-                  rowSpan="4"
-                  className="border border-gray-300 p-3 align-middle"
-                >
-                  In such cases delivery time shall be decided by mutual
-                  agreement via email communication
-                </td>
-              </tr>
-
-              <tr>
-                <td className="border border-gray-300 p-3">Urgent</td>
-                <td className="border border-gray-300 p-3">
-                  1-2 Business Days
-                </td>
-              </tr>
-
-              {/* Peak Days */}
-              <tr>
-                <td
-                  rowSpan="2"
-                  className="border border-gray-300 p-3 align-middle"
-                >
-                  During Peak Days
-                </td>
-
-                <td className="border border-gray-300 p-3">Regular</td>
-                <td className="border border-gray-300 p-3">
-                  4-7 Business Days
-                </td>
-              </tr>
-
-              <tr>
-                <td className="border border-gray-300 p-3">Urgent</td>
-                <td className="border border-gray-300 p-3">
-                  2-3 Business Days
-                </td>
-              </tr>
-
-              {/* Footer Row */}
-              <tr className="bg-white">
-                <td
-                  colSpan="6"
-                  className="border border-gray-300 p-4 text-gray-700"
-                >
-                  Delivery Time is the time between the payment of Token Amount
-                  and supply of First Draft.
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="card-royal" style={{ overflow: "hidden" }}>
+          <div className="table-responsive">
+            <table className="table mb-0 text-center" style={{ color: "var(--color-text-primary)" }}>
+              <thead style={{ background: "var(--gradient-royal)" }}>
+                <tr>
+                  {["Period", "Up to 30 Pages", "Priority", "Delivery Time", "More than 30 Pages"].map((h) => (
+                    <th key={h} style={{ padding: "1rem", color: "#FFFFFF", fontFamily: "var(--font-heading)", borderBottom: "none", fontWeight: 700 }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { period: "Normal Days", priority: "Regular", time: "3–4 Business Days", rowspan: true },
+                  { period: "Normal Days", priority: "Urgent",  time: "1–2 Business Days", rowspan: false },
+                  { period: "Peak Days",   priority: "Regular", time: "4–7 Business Days", rowspan: true },
+                  { period: "Peak Days",   priority: "Urgent",  time: "2–3 Business Days", rowspan: false },
+                ].map((row, idx) => (
+                  <tr key={idx} style={{ borderBottom: "1px solid var(--color-border)" }}>
+                    <td style={{ padding: "0.85rem 1rem", color: "var(--color-text-muted)" }}>{row.period}</td>
+                    <td style={{ padding: "0.85rem 1rem", color: "var(--color-text-muted)" }}>Up to 30 pages</td>
+                    <td style={{ padding: "0.85rem 1rem" }}>
+                      <span style={{
+                        padding: "0.25rem 0.75rem",
+                        borderRadius: "var(--radius-pill)",
+                        fontSize: "0.8rem",
+                        fontWeight: 600,
+                        background: row.priority === "Urgent" ? "rgba(192,57,43,0.1)" : "rgba(192,57,43,0.06)",
+                        color: row.priority === "Urgent" ? "var(--color-crimson-dark)" : "var(--color-crimson)",
+                        border: `1px solid rgba(192,57,43,${row.priority === "Urgent" ? "0.4" : "0.25"})`,
+                      }}>
+                        {row.priority === "Urgent"
+                          ? <><i className="fa-solid fa-bolt me-1"></i></>
+                          : <><i className="fa-regular fa-clock me-1"></i></>}
+                        {row.priority}
+                      </span>
+                    </td>
+                    <td style={{ padding: "0.85rem 1rem", color: "var(--color-text-primary)", fontWeight: 600 }}>
+                      {row.time}
+                    </td>
+                    {row.rowspan && (
+                      <td rowSpan="4" style={{ padding: "0.85rem 1rem", color: "var(--color-text-muted)", fontSize: "0.85rem", verticalAlign: "middle" }}>
+                        Delivery time decided by mutual agreement via email
+                      </td>
+                    )}
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan="4" style={{
+                    padding: "1rem",
+                    background: "#F9F9F9",
+                    borderTop: "1px solid var(--color-border)",
+                    color: "var(--color-text-muted)",
+                    fontSize: "0.83rem",
+                    fontStyle: "italic",
+                  }}>
+                    * Delivery Time = time between payment of Token Amount and supply of First Draft.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </>
+    </section>
   );
 }

@@ -1,13 +1,18 @@
-// src/features/quotes/quoteSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  form: {
-    serviceType: "standard", // 'standard' | 'urgent'
-    pages: "",               // string or number from input
+  step: 1,
+  stepOneData: {
+    name: "",
+    email: "",
+    service_category: "",
+    description: "",
   },
-  lastQuote: null,           // { amount, currency, ... } from backend
-  status: "idle",            // 'idle' | 'loading' | 'succeeded' | 'failed'
+  stepTwoData: {},      // service-specific fields (latex or data_analysis)
+  quoteId: null,        // returned from POST /quotes/request-quote/
+  quoteResponse: null,  // full quote object
+  orderId: null,        // returned from POST /quotes/{id}/accept/
+  status: "idle",       // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
 };
 
@@ -15,21 +20,23 @@ const quoteSlice = createSlice({
   name: "quote",
   initialState,
   reducers: {
-    setQuoteFormField(state, action) {
-      const { field, value } = action.payload;
-      state.form[field] = value;
+    setQuoteStep(state, action) {
+      state.step = action.payload;
     },
-    setQuoteForm(state, action) {
-      state.form = {
-        ...state.form,
-        ...action.payload,
-      };
+    setStepOneData(state, action) {
+      state.stepOneData = { ...state.stepOneData, ...action.payload };
     },
-    resetQuoteForm(state) {
-      state.form = initialState.form;
+    setStepTwoData(state, action) {
+      state.stepTwoData = { ...state.stepTwoData, ...action.payload };
     },
-    setQuote(state, action) {
-      state.lastQuote = action.payload;
+    setQuoteId(state, action) {
+      state.quoteId = action.payload;
+    },
+    setQuoteResponse(state, action) {
+      state.quoteResponse = action.payload;
+    },
+    setOrderId(state, action) {
+      state.orderId = action.payload;
     },
     setQuoteStatus(state, action) {
       state.status = action.payload;
@@ -37,23 +44,22 @@ const quoteSlice = createSlice({
     setQuoteError(state, action) {
       state.error = action.payload;
     },
-    clearQuoteState(state) {
-      state.form = initialState.form;
-      state.lastQuote = null;
-      state.status = "idle";
-      state.error = null;
+    resetQuoteWizard(state) {
+      Object.assign(state, initialState);
     },
   },
 });
 
 export const {
-  setQuoteFormField,
-  setQuoteForm,
-  resetQuoteForm,
-  setQuote,
+  setQuoteStep,
+  setStepOneData,
+  setStepTwoData,
+  setQuoteId,
+  setQuoteResponse,
+  setOrderId,
   setQuoteStatus,
   setQuoteError,
-  clearQuoteState,
+  resetQuoteWizard,
 } = quoteSlice.actions;
 
 export default quoteSlice.reducer;

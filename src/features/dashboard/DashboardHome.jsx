@@ -1,13 +1,5 @@
-import Footer from "../../components/layout/Footter";
-import Nav from "../../components/layout/Nav";
-import Dashboard from "../dashboard/Dashboard";
+import Dashboard from "./Dashboard";
 
 export default function DashboardHome() {
-  return (
-    <>
-      <Nav />
-      <Dashboard />
-      <Footer />
-    </>
-  );
+  return <Dashboard />;
 }

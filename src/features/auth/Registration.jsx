@@ -5,9 +5,7 @@ import RegistrationForm from "./Registrationform";
 export default function () {
   return (
     <>
-      <Nav />
       <RegistrationForm />
-      <Footer />
     </>
   );
 }
