@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import ProfileForm from "./ProfileForm";
 import "../../styles/variables.css";
@@ -21,7 +21,7 @@ export default function ProfilePage() {
       </h2>
 
       <div className="row g-4">
-        {/* Left — Avatar + Summary */}
+        {/* Left â€” Avatar + Summary */}
         <div className="col-12 col-md-4 col-lg-3">
           <div className="card-royal p-4 text-center">
             {/* Avatar */}
@@ -38,7 +38,7 @@ export default function ProfilePage() {
                 fontSize: "2rem",
                 fontWeight: 700,
                 color: "#FFFFFF",
-                border: "2px solid rgba(192,57,43,0.3)",
+                border: "2px solid rgba(124,58,237,0.3)",
                 boxShadow: "var(--shadow-card)",
               }}
             >
@@ -49,7 +49,7 @@ export default function ProfilePage() {
               {displayName}
             </h5>
             <p className="text-royal-muted mb-1" style={{ fontSize: "0.85rem" }}>
-              {user?.email || "—"}
+              {user?.email || "â€”"}
             </p>
 
             {profile?.userType && (
@@ -117,7 +117,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Right — Profile Form */}
+        {/* Right â€” Profile Form */}
         <div className="col-12 col-md-8 col-lg-9">
           <div className="card-royal p-4">
             <h5 style={{ fontSize: "1.1rem", color: "var(--color-text-primary)", fontWeight: 700, marginBottom: "1rem" }}>

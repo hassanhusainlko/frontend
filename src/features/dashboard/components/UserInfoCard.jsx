@@ -26,7 +26,7 @@ export default function UserInfoCard() {
         <div style={{
           width: 80, height: 80, borderRadius: "50%",
           background: "var(--gradient-royal)",
-          border: "3px solid rgba(192,57,43,0.2)",
+          border: "3px solid rgba(124,58,237,0.18)",
           display: "flex", alignItems: "center", justifyContent: "center",
           margin: "0 auto 0.75rem",
           fontSize: "1.6rem", fontWeight: 700,
@@ -58,8 +58,8 @@ export default function UserInfoCard() {
       {profileNotFound && (
         <div style={{ borderTop: "1px solid var(--color-border)", paddingTop: "1rem" }}>
           <div style={{
-            background: "rgba(192,57,43,0.05)",
-            border: "1px dashed rgba(192,57,43,0.3)",
+            background: "rgba(124,58,237,0.05)",
+            border: "1px dashed rgba(124,58,237,0.2)",
             borderRadius: "var(--radius-md)",
             padding: "1rem",
             textAlign: "center",
@@ -113,7 +113,7 @@ export default function UserInfoCard() {
             padding: "0.4rem 0.5rem", borderRadius: "var(--radius-sm)",
             transition: "background 0.15s",
           }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(192,57,43,0.07)"}
+            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(124,58,237,0.07)"}
             onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
           >
             <i className={`fa-solid ${icon}`} style={{ width: 16 }}></i> {label}

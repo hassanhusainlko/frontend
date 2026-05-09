@@ -1,46 +1,153 @@
-/* nav.css */
+/* ====================================================
+   Navbar — white background, purple accents
+   ==================================================== */
 
-/* Toggler Button Customization */
-.navbar-toggler {
-  border-color: rgba(97, 17, 17, 0.5);
+.custom-navbar {
+  background: #FFFFFF;
+  padding: 0 2rem;
+  height: var(--navbar-height);
+  box-shadow: var(--shadow-navbar);
+  border-bottom: 1px solid #E5E7EB;
+  transition: box-shadow var(--transition-normal);
 }
 
-.navbar-toggler-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.5%29' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+.logo {
+  height: 42px;
+  object-fit: contain;
 }
 
-/* Link Hover Effect */
+/* ── Center links ── */
 
+.nav-links {
+  gap: 0.15rem;
+}
 
-.nav-link {
+.nav-item-link {
+  color: #4B5563;
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.42rem 0.85rem;
+  border-radius: var(--radius-pill);
   position: relative;
-  text-decoration: none; /* Remove default underline */
-  color: #fff; /* Change to your desired color */
-  transition: color 0.3s ease; /* For text color animation */
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+  white-space: nowrap;
 }
 
-.nav-link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -5px; /* Adjust the space between text and underline */
-  width: 0;
-  height: 2px; /* Thickness of the underline */
-  background-color: #ffffff; /* Color of the underline */
-  transition: width 0.3s ease-in-out; /* Animation for underline */
+.nav-item-link:hover {
+  color: var(--color-primary);
+  background: rgba(124, 58, 237, 0.07);
 }
 
-.nav-link:hover {
-  color: #ffffff; /* Change the text color on hover */
-  
+.nav-item-link.active {
+  color: var(--color-primary);
+  background: rgba(124, 58, 237, 0.1);
+  font-weight: 600;
 }
 
-.nav-link:hover::after {
-  width: 100%; /* Expand the underline on hover */
+/* ── Right actions ── */
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-button.btn-warning:hover {
-  background-color: #ffc107;
-  color: #000;
-  box-shadow: #ccda07;
+/* ── Nav buttons ── */
+
+.btn-primary {
+  background: var(--gradient-button);
+  color: #FFFFFF;
+  border: none;
+  padding: 0.44rem 1.3rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.22);
+  transition:
+    transform var(--transition-bounce),
+    box-shadow var(--transition-normal),
+    background var(--transition-fast);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5B21B6 0%, #6D28D9 100%);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.30);
+  transform: translateY(-1px);
+  color: #FFFFFF;
+}
+.btn-primary:active { transform: translateY(0); }
+
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 0.4rem 1.1rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-bounce);
+}
+.btn-outline:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+.btn-outline:active { transform: translateY(0); }
+
+/* ── Mobile toggler ── */
+
+.navbar-toggler {
+  color: #4B5563;
+  font-size: 1.2rem;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+.navbar-toggler:hover { color: var(--color-primary); transform: scale(1.1); }
+
+/* ── Mobile menu ── */
+
+@media (max-width: 991px) {
+  .custom-navbar {
+    padding: 0 1rem;
+  }
+
+  .navbar-collapse {
+    background: #FFFFFF;
+    border-top: 1px solid #E5E7EB;
+    padding: 0.5rem 0;
+    animation: slideDown 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nav-links {
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.5rem 0;
+  }
+
+  .nav-item-link {
+    display: block;
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .nav-actions {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem 0 1rem;
+    gap: 0.5rem;
+  }
+
+  .btn-primary,
+  .btn-outline {
+    text-align: center;
+    width: 100%;
+  }
 }

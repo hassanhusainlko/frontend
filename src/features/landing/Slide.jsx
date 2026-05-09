@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import "../../styles/variables.css";
 
@@ -17,8 +17,8 @@ export default function HeroBanner() {
           display: flex;
           align-items: center;
           overflow: hidden;
-          background: #faf9f7;
-          border-bottom: 1px solid #ede8e2;
+          background: #F8F6FF;
+          border-bottom: 1px solid #E5E7EB;
         }
 
         .hero-banner::before {
@@ -28,7 +28,7 @@ export default function HeroBanner() {
           top: 0;
           bottom: 0;
           width: 5px;
-          background: linear-gradient(180deg, #c0392b 0%, #922b21 100%);
+          background: linear-gradient(180deg, #7C3AED 0%, #5B21B6 100%);
         }
 
         .hero-bg-shape {
@@ -38,7 +38,7 @@ export default function HeroBanner() {
           width: 520px;
           height: 520px;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(192,57,43,0.06) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%);
           pointer-events: none;
         }
 
@@ -53,8 +53,8 @@ export default function HeroBanner() {
               90deg,
               transparent,
               transparent 28px,
-              rgba(192,57,43,0.045) 28px,
-              rgba(192,57,43,0.045) 29px
+              rgba(124,58,237,0.045) 28px,
+              rgba(124,58,237,0.045) 29px
             );
           pointer-events: none;
         }
@@ -66,7 +66,7 @@ export default function HeroBanner() {
           font-family: 'Cormorant Garamond', serif;
           font-size: clamp(6rem, 12vw, 11rem);
           font-weight: 700;
-          color: rgba(192,57,43,0.06);
+          color: rgba(124,58,237,0.06);
           line-height: 1;
           pointer-events: none;
           user-select: none;
@@ -90,9 +90,9 @@ export default function HeroBanner() {
           font-weight: 600;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: #c0392b;
-          background: rgba(192,57,43,0.08);
-          border: 1px solid rgba(192,57,43,0.18);
+          color: #7C3AED;
+          background: rgba(124,58,237,0.08);
+          border: 1px solid rgba(124,58,237,0.18);
           padding: 0.3rem 0.8rem;
           border-radius: 2px;
           margin-bottom: 1.1rem;
@@ -102,7 +102,7 @@ export default function HeroBanner() {
           font-family: 'Cormorant Garamond', serif;
           font-size: clamp(2rem, 4vw, 3rem);
           font-weight: 700;
-          color: #1a1008;
+          color: #1E1B4B;
           line-height: 1.15;
           margin: 0 0 1rem 0;
           letter-spacing: -0.01em;
@@ -110,20 +110,20 @@ export default function HeroBanner() {
 
         .hero-heading em {
           font-style: italic;
-          color: #c0392b;
+          color: #7C3AED;
         }
 
         .hero-divider {
           width: 48px;
           height: 2px;
-          background: #c0392b;
+          background: #7C3AED;
           margin-bottom: 1rem;
           border-radius: 1px;
         }
 
         .hero-body {
           font-family: 'DM Sans', sans-serif;
-          color: #6b5c4e;
+          color: #6B7280;
           font-size: clamp(0.88rem, 1.5vw, 0.98rem);
           line-height: 1.72;
           margin-bottom: 1.8rem;
@@ -147,19 +147,19 @@ export default function HeroBanner() {
           gap: 0.45rem;
           padding: 0.65rem 1.6rem;
           border-radius: 3px;
-          background: #c0392b;
+          background: #7C3AED;
           color: #FFFFFF;
           border: none;
           cursor: pointer;
           transition: background 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
-          box-shadow: 0 3px 14px rgba(192,57,43,0.3);
+          box-shadow: 0 3px 14px rgba(124,58,237,0.3);
           letter-spacing: 0.02em;
         }
 
         .btn-primary-hero:hover {
-          background: #a93226;
+          background: #6D28D9;
           transform: translateY(-1px);
-          box-shadow: 0 6px 20px rgba(192,57,43,0.38);
+          box-shadow: 0 6px 20px rgba(124,58,237,0.38);
           color: #FFFFFF;
         }
 
@@ -174,17 +174,17 @@ export default function HeroBanner() {
           padding: 0.63rem 1.6rem;
           border-radius: 3px;
           background: transparent;
-          color: #1a1008;
-          border: 1.5px solid #c8bdb5;
+          color: #1E1B4B;
+          border: 1.5px solid #C4B5FD;
           cursor: pointer;
           transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
           letter-spacing: 0.02em;
         }
 
         .btn-ghost-hero:hover {
-          border-color: #c0392b;
-          color: #c0392b;
-          background: rgba(192,57,43,0.04);
+          border-color: #7C3AED;
+          color: #7C3AED;
+          background: rgba(124,58,237,0.04);
         }
 
         .hero-stats {
@@ -192,7 +192,7 @@ export default function HeroBanner() {
           gap: 2rem;
           margin-top: 2rem;
           padding-top: 1.5rem;
-          border-top: 1px solid #ede8e2;
+          border-top: 1px solid #E5E7EB;
           flex-wrap: wrap;
         }
 
@@ -206,14 +206,14 @@ export default function HeroBanner() {
           font-family: 'Cormorant Garamond', serif;
           font-size: 1.6rem;
           font-weight: 700;
-          color: #c0392b;
+          color: #7C3AED;
           line-height: 1;
         }
 
         .hero-stat-label {
           font-family: 'DM Sans', sans-serif;
           font-size: 0.72rem;
-          color: #9e8d80;
+          color: #9CA3AF;
           letter-spacing: 0.08em;
           text-transform: uppercase;
         }

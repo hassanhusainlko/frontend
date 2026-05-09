@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   useGetProfileQuery,
   useCreateProfileMutation,
@@ -27,8 +27,8 @@ export default function ProfileForm() {
     error,
   } = useGetProfileQuery();
 
-  // 404 → profile doesn't exist yet → create mode
-  // 200 → profile found → update mode
+  // 404 â†’ profile doesn't exist yet â†’ create mode
+  // 200 â†’ profile found â†’ update mode
   const isCreateMode = isError && error?.status === 404;
   const isUpdateMode = isSuccess && profileData != null;
   const isOtherError  = isError && error?.status !== 404;
@@ -84,17 +84,17 @@ export default function ProfileForm() {
     }
   };
 
-  // ── Loading state ─────────────────────────────────────────────
+  // â”€â”€ Loading state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (isLoading || isFetching) {
     return (
       <div className="text-center py-4">
         <div className="spinner-royal mx-auto"></div>
-        <p className="text-royal-muted mt-2">Loading profile…</p>
+        <p className="text-royal-muted mt-2">Loading profileâ€¦</p>
       </div>
     );
   }
 
-  // ── Non-404 fetch error ───────────────────────────────────────
+  // â”€â”€ Non-404 fetch error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (isOtherError) {
     return (
       <div className="alert-royal-error">
@@ -106,15 +106,15 @@ export default function ProfileForm() {
 
   const inputClass = "form-control form-control-royal mb-0";
 
-  // ── Form (create or update) ───────────────────────────────────
+  // â”€â”€ Form (create or update) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <form onSubmit={handleSubmit}>
       {/* Mode indicator */}
       <div className="d-flex align-items-center gap-2 mb-4 pb-3" style={{ borderBottom: "1px solid var(--color-border)" }}>
         <div style={{
           width: 32, height: 32, borderRadius: "50%",
-          background: isCreateMode ? "rgba(192,57,43,0.1)" : "rgba(39,174,96,0.1)",
-          border: `1px solid ${isCreateMode ? "rgba(192,57,43,0.3)" : "rgba(39,174,96,0.3)"}`,
+          background: isCreateMode ? "rgba(124,58,237,0.1)" : "rgba(39,174,96,0.1)",
+          border: `1px solid ${isCreateMode ? "rgba(124,58,237,0.3)" : "rgba(39,174,96,0.3)"}`,
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}>
           <i
@@ -128,7 +128,7 @@ export default function ProfileForm() {
           </div>
           <div style={{ color: "var(--color-text-muted)", fontSize: "0.78rem" }}>
             {isCreateMode
-              ? "No profile found — fill in your details below."
+              ? "No profile found â€” fill in your details below."
               : "Your profile is set up. Edit any field and save."}
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function ProfileForm() {
         {isSaving ? (
           <>
             <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-            {isCreateMode ? "Creating…" : "Saving…"}
+            {isCreateMode ? "Creatingâ€¦" : "Savingâ€¦"}
           </>
         ) : (
           <>

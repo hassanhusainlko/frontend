@@ -53,6 +53,40 @@ export default function LoginDashboard() {
 
   return (
     <div className="auth-page">
+      {/* Home button */}
+      <Link
+        to="/"
+        style={{
+          position: "fixed",
+          top: "1.1rem",
+          left: "1.4rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          textDecoration: "none",
+          color: "var(--color-primary)",
+          fontSize: "0.88rem",
+          fontWeight: 600,
+          padding: "0.4rem 0.9rem",
+          borderRadius: "var(--radius-pill)",
+          background: "rgba(124,58,237,0.08)",
+          border: "1px solid rgba(124,58,237,0.2)",
+          transition: "background 0.18s ease, box-shadow 0.18s ease",
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "rgba(124,58,237,0.14)";
+          e.currentTarget.style.boxShadow = "0 2px 8px rgba(124,58,237,0.15)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "rgba(124,58,237,0.08)";
+          e.currentTarget.style.boxShadow = "none";
+        }}
+      >
+        <i className="fa-solid fa-arrow-left" style={{ fontSize: "0.8rem" }}></i>
+        Home
+      </Link>
+
       <div className="auth-card">
         <div className="auth-card-header">
           <div

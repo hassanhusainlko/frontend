@@ -1,4 +1,4 @@
-import howWeWorkImage from "/how_we_work.png";
+﻿import howWeWorkImage from "/how_we_work.png";
 import "../../styles/variables.css";
 
 const STEPS = [
@@ -8,7 +8,7 @@ const STEPS = [
   { icon: "fa-file-lines", title: "First Draft", desc: "Admin uploads the First Draft for your review. Request corrections or approve to move forward." },
   { icon: "fa-file-circle-check", title: "Final Document", desc: "After incorporating your feedback, the admin uploads the Final Document for your review." },
   { icon: "fa-credit-card", title: "Pay Remaining (70%)", desc: "After reviewing and approving the Final Document, pay the remaining 70% of the total amount." },
-  { icon: "fa-box-open", title: "Delivery", desc: "Payment verified — the Final Project is made available for you to download immediately." },
+  { icon: "fa-box-open", title: "Delivery", desc: "Payment verified â€” the Final Project is made available for you to download immediately." },
 ];
 
 const REFERRAL_RULES = [
@@ -42,7 +42,7 @@ export default function HowWeWork() {
                     minWidth: 48, height: 48, borderRadius: "50%",
                     background: "var(--gradient-royal)",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    border: "1px solid rgba(192,57,43,0.25)",
+                    border: "1px solid rgba(124,58,237,0.25)",
                     boxShadow: "var(--shadow-card)",
                     flexShrink: 0,
                   }}>

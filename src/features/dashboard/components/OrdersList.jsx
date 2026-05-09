@@ -2,16 +2,15 @@ import { Link } from "react-router-dom";
 import { useGetOrdersQuery } from "../../orders/ordersApi";
 import "../../../styles/variables.css";
 
-// Colours tuned for white/light card background
 const STATUS_BADGE = {
-  pending:                { bg: "rgba(192,57,43,0.09)",  color: "#922B21",  border: "rgba(192,57,43,0.3)" },
-  confirmed:              { bg: "rgba(192,57,43,0.09)",  color: "#922B21",  border: "rgba(192,57,43,0.3)" },
-  in_progress:            { bg: "rgba(41,128,185,0.10)", color: "#2471A3",  border: "rgba(41,128,185,0.3)" },
-  awaiting_token_payment: { bg: "rgba(192,57,43,0.07)",  color: "#C0392B",  border: "rgba(192,57,43,0.25)" },
-  preview_submitted:      { bg: "rgba(41,128,185,0.10)", color: "#2471A3",  border: "rgba(41,128,185,0.3)" },
-  awaiting_final_payment: { bg: "rgba(192,57,43,0.07)",  color: "#C0392B",  border: "rgba(192,57,43,0.25)" },
-  completed:              { bg: "rgba(39,174,96,0.10)",  color: "#1E8449",  border: "rgba(39,174,96,0.3)" },
-  delivered:              { bg: "rgba(39,174,96,0.13)",  color: "#1A6B3C",  border: "rgba(39,174,96,0.4)" },
+  pending:                { bg: "rgba(217,119,6,0.08)",   color: "#B45309",  border: "rgba(217,119,6,0.22)" },
+  confirmed:              { bg: "rgba(37,99,235,0.07)",   color: "#1D4ED8",  border: "rgba(37,99,235,0.2)" },
+  in_progress:            { bg: "rgba(124,58,237,0.08)",  color: "#6D28D9",  border: "rgba(124,58,237,0.22)" },
+  awaiting_token_payment: { bg: "rgba(217,119,6,0.08)",   color: "#B45309",  border: "rgba(217,119,6,0.22)" },
+  preview_submitted:      { bg: "rgba(124,58,237,0.08)",  color: "#6D28D9",  border: "rgba(124,58,237,0.22)" },
+  awaiting_final_payment: { bg: "rgba(217,119,6,0.08)",   color: "#B45309",  border: "rgba(217,119,6,0.22)" },
+  completed:              { bg: "rgba(5,150,105,0.08)",   color: "#047857",  border: "rgba(5,150,105,0.25)" },
+  delivered:              { bg: "rgba(5,150,105,0.08)",   color: "#047857",  border: "rgba(5,150,105,0.25)" },
 };
 
 function StatusBadge({ status }) {
@@ -81,7 +80,7 @@ export default function OrdersList({ onSelectOrder, selectedOrderId }) {
                   padding: "0.65rem 0.75rem",
                   marginBottom: "0.4rem",
                   borderRadius: "var(--radius-sm)",
-                  background: isSelected ? "rgba(192,57,43,0.07)" : "#FAFAFA",
+                  background: isSelected ? "rgba(124,58,237,0.07)" : "#FAFAFA",
                   border: `1px solid ${isSelected ? "var(--color-crimson)" : "var(--color-border)"}`,
                   cursor: "pointer",
                   transition: "background 0.15s, border-color 0.15s",
@@ -98,7 +97,7 @@ export default function OrdersList({ onSelectOrder, selectedOrderId }) {
                       padding: "0.1rem 0.45rem",
                       borderRadius: "var(--radius-sm)",
                       fontSize: "0.68rem",
-                      background: "rgba(192,57,43,0.07)",
+                      background: "rgba(124,58,237,0.07)",
                       color: "var(--color-text-muted)",
                       border: "1px solid var(--color-border)",
                       textTransform: "capitalize",

@@ -1,4 +1,4 @@
-import "../../styles/variables.css";
+﻿import "../../styles/variables.css";
 
 export default function DeliveryTimeTable() {
   return (
@@ -27,10 +27,10 @@ export default function DeliveryTimeTable() {
               </thead>
               <tbody>
                 {[
-                  { period: "Normal Days", priority: "Regular", time: "3–4 Business Days", rowspan: true },
-                  { period: "Normal Days", priority: "Urgent",  time: "1–2 Business Days", rowspan: false },
-                  { period: "Peak Days",   priority: "Regular", time: "4–7 Business Days", rowspan: true },
-                  { period: "Peak Days",   priority: "Urgent",  time: "2–3 Business Days", rowspan: false },
+                  { period: "Normal Days", priority: "Regular", time: "3â€“4 Business Days", rowspan: true },
+                  { period: "Normal Days", priority: "Urgent",  time: "1â€“2 Business Days", rowspan: false },
+                  { period: "Peak Days",   priority: "Regular", time: "4â€“7 Business Days", rowspan: true },
+                  { period: "Peak Days",   priority: "Urgent",  time: "2â€“3 Business Days", rowspan: false },
                 ].map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: "1px solid var(--color-border)" }}>
                     <td style={{ padding: "0.85rem 1rem", color: "var(--color-text-muted)" }}>{row.period}</td>
@@ -41,9 +41,9 @@ export default function DeliveryTimeTable() {
                         borderRadius: "var(--radius-pill)",
                         fontSize: "0.8rem",
                         fontWeight: 600,
-                        background: row.priority === "Urgent" ? "rgba(192,57,43,0.1)" : "rgba(192,57,43,0.06)",
+                        background: row.priority === "Urgent" ? "rgba(124,58,237,0.1)" : "rgba(124,58,237,0.06)",
                         color: row.priority === "Urgent" ? "var(--color-crimson-dark)" : "var(--color-crimson)",
-                        border: `1px solid rgba(192,57,43,${row.priority === "Urgent" ? "0.4" : "0.25"})`,
+                        border: `1px solid rgba(124,58,237,${row.priority === "Urgent" ? "0.4" : "0.25"})`,
                       }}>
                         {row.priority === "Urgent"
                           ? <><i className="fa-solid fa-bolt me-1"></i></>
