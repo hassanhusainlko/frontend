@@ -15,10 +15,12 @@ export default function HeroBanner() {
           margin-top: var(--navbar-height);
           min-height: 52vh;
           display: flex;
+          justify-content: center;
           align-items: center;
           overflow: hidden;
           background: #F8F6FF;
           border-bottom: 1px solid #E5E7EB;
+          text-align: center;
         }
 
         .hero-banner::before {
@@ -77,8 +79,11 @@ export default function HeroBanner() {
         .hero-content {
           position: relative;
           z-index: 10;
-          padding: 3rem 4rem 3rem 5%;
+          padding: 3rem 2rem;
           max-width: 700px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .hero-tag {
@@ -128,15 +133,22 @@ export default function HeroBanner() {
           line-height: 1.72;
           margin-bottom: 1.8rem;
           max-width: 460px;
+          text-align: center;
         }
 
         .hero-actions {
           display: flex;
-          gap: 0.75rem;
+          gap: 1rem;
           flex-wrap: wrap;
+          justify-content: center;
           align-items: center;
         }
-
+        .btn-primary-hero,
+          .btn-ghost-hero {
+            width: 220px;
+            justify-content: center;
+            min-height: 52px;
+          }
         .btn-primary-hero {
           font-family: 'DM Sans', sans-serif;
           font-weight: 600;
@@ -196,10 +208,14 @@ export default function HeroBanner() {
           flex-wrap: wrap;
         }
 
-        .hero-stat {
+        .hero-stats {
           display: flex;
-          flex-direction: column;
-          gap: 0.15rem;
+          justify-content: center;
+          gap: 2rem;
+          margin-top: 2rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid #E5E7EB;
+          flex-wrap: wrap;
         }
 
         .hero-stat-num {
@@ -249,20 +265,17 @@ export default function HeroBanner() {
           </p>
 
           <div className="hero-actions">
-            <Link
-              to={token ? "/dashboard/quote-request" : "/register"}
-              className="btn-primary-hero"
-            >
-              <i className="fa-solid fa-wand-magic-sparkles"></i>
-              Get a Quote
+            <Link to="/services/data-analysis" className="btn-primary-hero">
+              <i className="fa-solid fa-chart-line"></i>
+              Data Analysis
             </Link>
 
             <Link
-              to={token ? "/dashboard" : "/login"}
-              className="btn-ghost-hero"
+              to="/services/latex-writing"
+              className="btn-ghost-hero same-size-btn"
             >
-              <i className="fa-solid fa-right-to-bracket"></i>
-              {token ? "Go to Dashboard" : "Sign In"}
+              <i className="fa-solid fa-file-lines"></i>
+              LaTeX Writing
             </Link>
           </div>
 
