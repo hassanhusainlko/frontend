@@ -40,6 +40,8 @@ export const DashboardRoutes = (
 
     {/* Order creation — protected (was incorrectly exposed before) */}
     <Route path="orders/create-latex" element={<CreateLatexOrder />} />
+    <Route path="orders/create-latex/:orderId" element={<CreateLatexOrder />} />
     <Route path="orders/create-data-analysis" element={<CreateDataAnalysisOrder />} />
+    <Route path="orders/create-data-analysis/:orderId" element={<CreateDataAnalysisOrder />} />
   </Route>
 );

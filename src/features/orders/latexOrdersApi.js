@@ -19,7 +19,7 @@ export const latexOrdersApi = createApi({
     // POST /orders/latex/
     createLatexDetails: builder.mutation({
       query: (payload) => ({
-        url: "/orders/latex/",
+        url: `/orders/orders/create-with-details/`,
         method: "POST",
         body: {
           order: payload.order,

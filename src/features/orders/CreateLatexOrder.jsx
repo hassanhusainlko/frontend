@@ -1,8 +1,7 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useCreateOrderMutation } from "./ordersApi";
-import { useCreateLatexDetailsMutation } from "./latexOrdersApi";
+import { useCreateOrderWithDetailsMutation } from "./ordersApi";
 import "../../styles/variables.css";
 
 const STEPS = ["Order Details", "Upload Files"];
@@ -44,6 +43,7 @@ function StepIndicator({ current }) {
 
 export default function CreateLatexOrder() {
   const navigate = useNavigate();
+  const { orderId: urlOrderId } = useParams();
   const token = useSelector((state) => state.auth.token);
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
@@ -62,17 +62,40 @@ export default function CreateLatexOrder() {
     { id: 1, file: null, fileType: "client_main_file", progress: 0, status: "idle" },
   ]);
 
-  const [createOrder, { isLoading: isCreating }] = useCreateOrderMutation();
-  const [createLatexDetails, { isLoading: isAddingDetails }] = useCreateLatexDetailsMutation();
+  const [orderId, setOrderId] = useState(null);
+  const [createOrderWithDetails, { isLoading: isCreating }] = useCreateOrderWithDetailsMutation();
+
+  useEffect(() => {
+    if (urlOrderId) {
+      setOrderId(Number(urlOrderId));
+      setStep(2);
+    }
+  }, [urlOrderId]);
 
   const inputClass = "form-control form-control-royal";
   const selectClass = "form-select form-select-royal";
 
-  const handleNextStep1 = (e) => {
+  const handleNextStep1 = async (e) => {
     e.preventDefault();
     setError("");
     if (!details.conversion_type) { setError("Conversion type is required."); return; }
-    setStep(2);
+    try {
+      const result = await createOrderWithDetails({
+        service_category: "latex",
+        priority,
+        conversion_type: details.conversion_type,
+        estimated_pages: Number(details.estimated_pages) || 1,
+        journal_template: details.journal_template,
+        bibliography_style: details.bibliography_style,
+        figures_tables_count: Number(details.figures_tables_count) || 0,
+        special_instructions: details.special_instructions,
+      }).unwrap();
+      setOrderId(result.id);
+      window.history.replaceState(null, "", `/orders/create-latex/${result.id}`);
+      setStep(2);
+    } catch (err) {
+      setError(err?.data?.detail || err?.data?.message || err?.message || "Failed to create order.");
+    }
   };
 
   const addFileRow = () => {
@@ -117,58 +140,23 @@ export default function CreateLatexOrder() {
     e.preventDefault();
     setError("");
     const toUpload = files.filter((f) => f.file);
-    let newOrderId = null;
-    let readyToUpload = false;
     try {
-      const result = await createOrder({ service_category: "latex", priority }).unwrap();
-      newOrderId = result.id;
-      await createLatexDetails({
-        order: newOrderId,
-        conversion_type: details.conversion_type,
-        estimated_pages: Number(details.estimated_pages) || 1,
-        journal_template: details.journal_template,
-        bibliography_style: details.bibliography_style,
-        figures_tables_count: Number(details.figures_tables_count) || 0,
-        special_instructions: details.special_instructions,
-      }).unwrap();
-      readyToUpload = true;
       for (let i = 0; i < toUpload.length; i++) {
         const realIdx = files.indexOf(toUpload[i]);
         setFiles((prev) => prev.map((f, j) => j === realIdx ? { ...f, status: "uploading" } : f));
-        await uploadFileXHR(newOrderId, toUpload[i], realIdx);
+        await uploadFileXHR(orderId, toUpload[i], realIdx);
       }
-      navigate(`/dashboard/orders/${newOrderId}`);
-    } catch (err) {
-      if (readyToUpload && newOrderId) {
-        navigate(`/dashboard/orders/${newOrderId}`);
-      } else {
-        setError(err?.data?.detail || err?.data?.message || err?.message || "Submission failed.");
-      }
+      navigate(`/dashboard/orders/${orderId}`);
+    } catch {
+      navigate(`/dashboard/orders/${orderId}`);
     }
   };
 
-  const skipUpload = async () => {
-    setError("");
-    try {
-      const { id: newOrderId } = await createOrder({
-        service_category: "latex", priority,
-      }).unwrap();
-      await createLatexDetails({
-        order: newOrderId,
-        conversion_type: details.conversion_type,
-        estimated_pages: Number(details.estimated_pages) || 1,
-        journal_template: details.journal_template,
-        bibliography_style: details.bibliography_style,
-        figures_tables_count: Number(details.figures_tables_count) || 0,
-        special_instructions: details.special_instructions,
-      }).unwrap();
-      navigate(`/dashboard/orders/${newOrderId}`);
-    } catch (err) {
-      setError(err?.data?.detail || err?.data?.message || "Submission failed.");
-    }
+  const skipUpload = () => {
+    navigate(`/dashboard/orders/${orderId}`);
   };
 
-  const isSubmitting = isCreating || isAddingDetails;
+  const isSubmitting = isCreating;
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg-page)", paddingTop: "calc(var(--navbar-height) + 2rem)", paddingBottom: "3rem" }}>
@@ -265,8 +253,10 @@ export default function CreateLatexOrder() {
                   onChange={(e) => setDetails((s) => ({ ...s, special_instructions: e.target.value }))}></textarea>
               </div>
 
-              <button type="submit" className="btn-gold">
-                Next <i className="fa-solid fa-arrow-right ms-2"></i>
+              <button type="submit" className="btn-gold" disabled={isCreating}>
+                {isCreating
+                  ? <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Creating…</>
+                  : <><i className="fa-solid fa-arrow-right me-2"></i>Next</>}
               </button>
             </form>
           )}

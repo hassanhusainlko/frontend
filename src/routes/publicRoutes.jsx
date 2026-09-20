@@ -24,7 +24,7 @@ export const PublicRoutes = (
     <Route path="activate/:uid/:token" element={<ActivateAccount />} />
     <Route path="forgot-password" element={<PasswordReset />} />
     <Route
-      path="reset-password/:uid/:token"
+      path="password/reset/confirm/:uid/:token"
       element={<PasswordResetConfirm />}
     />
   </>

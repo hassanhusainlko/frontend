@@ -1,8 +1,7 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useCreateOrderMutation } from "./ordersApi";
-import { useCreateDataAnalysisDetailsMutation } from "./dataAnalysisApi";
+import { useCreateOrderWithDetailsMutation } from "./ordersApi";
 import "../../styles/variables.css";
 
 const STEPS = ["Order Details", "Upload Files"];
@@ -43,6 +42,7 @@ function StepIndicator({ current }) {
 
 export default function CreateDataAnalysisOrder() {
   const navigate = useNavigate();
+  const { orderId: urlOrderId } = useParams();
   const token = useSelector((state) => state.auth.token);
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
@@ -65,19 +65,46 @@ export default function CreateDataAnalysisOrder() {
     { id: 1, file: null, fileType: "client_main_file", progress: 0, status: "idle" },
   ]);
 
-  const [createOrder, { isLoading: isCreating }] = useCreateOrderMutation();
-  const [createDataAnalysisDetails, { isLoading: isAddingDetails }] = useCreateDataAnalysisDetailsMutation();
+  const [orderId, setOrderId] = useState(null);
+  const [createOrderWithDetails, { isLoading: isCreating }] = useCreateOrderWithDetailsMutation();
+
+  useEffect(() => {
+    if (urlOrderId) {
+      setOrderId(Number(urlOrderId));
+      setStep(2);
+    }
+  }, [urlOrderId]);
 
   const inputClass = "form-control form-control-royal";
   const selectClass = "form-select form-select-royal";
 
-  const handleNextStep1 = (e) => {
+  const handleNextStep1 = async (e) => {
     e.preventDefault();
     setError("");
     if (!details.analysis_for) { setError("Please select what this analysis is for."); return; }
     if (!details.data_type) { setError("Data type is required."); return; }
     if (!details.analysis_objective.trim()) { setError("Analysis objective is required."); return; }
-    setStep(2);
+    try {
+      const result = await createOrderWithDetails({
+        service_category: "data_analysis",
+        priority,
+        analysis_for: details.analysis_for,
+        title: details.title,
+        data_type: details.data_type,
+        analysis_objective: details.analysis_objective,
+        charts_required: details.charts_required,
+        report_format: details.report_format,
+        additional_notes: details.additional_notes,
+        introduction: details.introduction,
+        review_of_literature: details.review_of_literature,
+        managing_references: details.managing_references,
+      }).unwrap();
+      setOrderId(result.id);
+      window.history.replaceState(null, "", `/orders/create-data-analysis/${result.id}`);
+      setStep(2);
+    } catch (err) {
+      setError(err?.data?.detail || err?.data?.message || err?.message || "Failed to create order.");
+    }
   };
 
   const addFileRow = () => {
@@ -122,42 +149,23 @@ export default function CreateDataAnalysisOrder() {
     e.preventDefault();
     setError("");
     const toUpload = files.filter((f) => f.file);
-    let newOrderId = null;
-    let readyToUpload = false;
     try {
-      const result = await createOrder({ service_category: "data_analysis", priority }).unwrap();
-      newOrderId = result.id;
-      await createDataAnalysisDetails({ order: newOrderId, ...details }).unwrap();
-      readyToUpload = true;
       for (let i = 0; i < toUpload.length; i++) {
         const realIdx = files.indexOf(toUpload[i]);
         setFiles((prev) => prev.map((f, j) => j === realIdx ? { ...f, status: "uploading" } : f));
-        await uploadFileXHR(newOrderId, toUpload[i], realIdx);
+        await uploadFileXHR(orderId, toUpload[i], realIdx);
       }
-      navigate(`/dashboard/orders/${newOrderId}`);
-    } catch (err) {
-      if (readyToUpload && newOrderId) {
-        navigate(`/dashboard/orders/${newOrderId}`);
-      } else {
-        setError(err?.data?.detail || err?.data?.message || err?.message || "Submission failed.");
-      }
+      navigate(`/dashboard/orders/${orderId}`);
+    } catch {
+      navigate(`/dashboard/orders/${orderId}`);
     }
   };
 
-  const skipUpload = async () => {
-    setError("");
-    try {
-      const { id: newOrderId } = await createOrder({
-        service_category: "data_analysis", priority,
-      }).unwrap();
-      await createDataAnalysisDetails({ order: newOrderId, ...details }).unwrap();
-      navigate(`/dashboard/orders/${newOrderId}`);
-    } catch (err) {
-      setError(err?.data?.detail || err?.data?.message || "Submission failed.");
-    }
+  const skipUpload = () => {
+    navigate(`/dashboard/orders/${orderId}`);
   };
 
-  const isSubmitting = isCreating || isAddingDetails;
+  const isSubmitting = isCreating;
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-bg-page)", paddingTop: "calc(var(--navbar-height) + 2rem)", paddingBottom: "3rem" }}>
@@ -286,8 +294,10 @@ export default function CreateDataAnalysisOrder() {
                   onChange={(e) => setDetails((s) => ({ ...s, additional_notes: e.target.value }))}></textarea>
               </div>
 
-              <button type="submit" className="btn-gold">
-                Next <i className="fa-solid fa-arrow-right ms-2"></i>
+              <button type="submit" className="btn-gold" disabled={isCreating}>
+                {isCreating
+                  ? <><span className="spinner-border spinner-border-sm me-2" role="status"></span>Creating…</>
+                  : <><i className="fa-solid fa-arrow-right me-2"></i>Next</>}
               </button>
             </form>
           )}

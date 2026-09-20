@@ -7,9 +7,12 @@ import {
   useRequestRevisionMutation,
   useApprovePreviewMutation,
   useUpdateOrderDetailsMutation,
+  useApplyCouponMutation,
+  useRemoveCouponMutation,
 } from "./ordersApi";
 import { useGetLatexByOrderQuery, useUpdateLatexDetailsMutation } from "./latexOrdersApi";
 import { useGetDataAnalysisByOrderQuery, useUpdateDataAnalysisDetailsMutation } from "./dataAnalysisApi";
+import { useGetMyCouponsQuery } from "../coupons/couponsApi";
 import "../../styles/variables.css";
 
 const STATUS_LABELS = {
@@ -99,6 +102,11 @@ export default function OrderDetails() {
   const [updateLatex, { isLoading: isSavingLatex }] = useUpdateLatexDetailsMutation();
   const [updateDataAnalysis, { isLoading: isSavingDA }] = useUpdateDataAnalysisDetailsMutation();
   const [updateOrderDetails, { isLoading: isSavingOrder }] = useUpdateOrderDetailsMutation();
+  const [applyCoupon, { isLoading: isApplyingCoupon }] = useApplyCouponMutation();
+  const [removeCoupon, { isLoading: isRemovingCoupon }] = useRemoveCouponMutation();
+  const { data: coupons = [] } = useGetMyCouponsQuery();
+  const [couponError, setCouponError] = useState("");
+  const [couponSuccess, setCouponSuccess] = useState("");
 
   // ── Unified edit mode ──
   const [editingAll, setEditingAll] = useState(false);
@@ -170,6 +178,30 @@ export default function OrderDetails() {
       await approvePreview(orderId).unwrap();
     } catch (err) {
       console.error("Approve failed", err);
+    }
+  };
+
+  const handleApplyCoupon = async (code) => {
+    setCouponError("");
+    setCouponSuccess("");
+    try {
+      await applyCoupon({ orderId, code }).unwrap();
+      setCouponSuccess(`Coupon "${code}" applied successfully.`);
+      refetchOrder();
+    } catch (err) {
+      setCouponError(err?.data?.detail || err?.data?.message || "Failed to apply coupon.");
+    }
+  };
+
+  const handleRemoveCoupon = async () => {
+    setCouponError("");
+    setCouponSuccess("");
+    try {
+      await removeCoupon(orderId).unwrap();
+      setCouponSuccess("Coupon removed.");
+      refetchOrder();
+    } catch (err) {
+      setCouponError(err?.data?.detail || err?.data?.message || "Failed to remove coupon.");
     }
   };
 
@@ -272,12 +304,6 @@ export default function OrderDetails() {
               <h6 style={{ color: "var(--color-text-primary)", fontWeight: 700, margin: 0 }}>
                 <i className="fa-solid fa-circle-info me-2" style={{ color: "var(--color-crimson)" }}></i>Order Details
               </h6>
-              {order.is_editable_by_client && !editingAll && (
-                <button className="btn-outline-gold" style={{ fontSize: "0.78rem", padding: "0.3rem 0.9rem" }}
-                  onClick={startEditAll}>
-                  <i className="fa-solid fa-pen me-1"></i>Edit Order
-                </button>
-              )}
             </div>
 
             {saveError && editingAll && (
@@ -290,7 +316,6 @@ export default function OrderDetails() {
                 <span style={{ color: "var(--color-text-primary)", fontWeight: 600 }}>#{order.id}</span>
               </div>
 
-              {/* Service — always read-only */}
               <div className="d-flex justify-content-between mb-2">
                 <span className="text-royal-muted">Service</span>
                 <span style={{ color: "var(--color-text-primary)", textTransform: "capitalize" }}>
@@ -298,7 +323,6 @@ export default function OrderDetails() {
                 </span>
               </div>
 
-              {/* Priority — editable when editingAll */}
               {editingAll ? (
                 <div className="mb-3">
                   <label className="form-label-royal">Priority</label>
@@ -327,20 +351,30 @@ export default function OrderDetails() {
                 </span>
               </div>
 
-              {order.final_amount && (
+              {order.subtotal != null && (
                 <>
                   <hr style={{ borderColor: "var(--color-border)" }} />
                   <div className="d-flex justify-content-between mb-2">
-                    <span className="text-royal-muted">Total Amount</span>
-                    <span style={{ color: "var(--color-crimson)", fontWeight: 700 }}>₹{order.final_amount}</span>
+                    <span className="text-royal-muted">Subtotal</span>
+                    <span style={{ color: "var(--color-text-primary)" }}>₹{order.subtotal}</span>
                   </div>
-                  {order.token_amount && (
+                  {order.discount_amount > 0 && (
+                    <div className="d-flex justify-content-between mb-2">
+                      <span className="text-royal-muted">Discount</span>
+                      <span style={{ color: "var(--color-success)" }}>-₹{order.discount_amount}</span>
+                    </div>
+                  )}
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="text-royal-muted">Total</span>
+                    <span style={{ color: "var(--color-crimson)", fontWeight: 700 }}>₹{order.total}</span>
+                  </div>
+                  {order.token_amount > 0 && (
                     <div className="d-flex justify-content-between mb-2">
                       <span className="text-royal-muted">Token (30%)</span>
                       <span style={{ color: "var(--color-text-primary)" }}>₹{order.token_amount}</span>
                     </div>
                   )}
-                  {order.remaining_amount && (
+                  {order.remaining_amount > 0 && (
                     <div className="d-flex justify-content-between mb-2">
                       <span className="text-royal-muted">Remaining (70%)</span>
                       <span style={{ color: "var(--color-text-primary)" }}>₹{order.remaining_amount}</span>
@@ -355,7 +389,69 @@ export default function OrderDetails() {
                 </>
               )}
 
-              {/* Edit mode save/cancel buttons */}
+              {order.assigned_to && (
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-royal-muted">Assigned To</span>
+                  <span style={{ color: "var(--color-text-primary)" }}>#{order.assigned_to}</span>
+                </div>
+              )}
+
+              {order.applied_coupon && (
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="text-royal-muted">Coupon</span>
+                  <div className="d-flex align-items-center gap-2">
+                    <span style={{ color: "var(--color-success)", fontWeight: 600 }}>Applied</span>
+                    <button className="btn-outline-gold" style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem" }}
+                      disabled={isRemovingCoupon} onClick={handleRemoveCoupon}>
+                      {isRemovingCoupon ? <span className="spinner-border spinner-border-sm" role="status"></span> : <><i className="fa-solid fa-times me-1"></i>Remove</>}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {couponError && <div className="alert-royal-error mb-2" style={{ fontSize: "0.78rem" }}>{couponError}</div>}
+              {couponSuccess && <div className="alert-royal-success mb-2" style={{ fontSize: "0.78rem" }}>{couponSuccess}</div>}
+
+              {order.subtotal != null && !order.applied_coupon && coupons.length > 0 && (
+                <>
+                  <hr style={{ borderColor: "var(--color-border)" }} />
+                  <div style={{ fontSize: "0.82rem", color: "var(--color-text-muted)", marginBottom: "0.5rem" }}>
+                    <i className="fa-solid fa-tag me-1" style={{ color: "var(--color-crimson)" }}></i>Available Coupons
+                  </div>
+                  <div className="d-flex flex-column gap-2">
+                    {coupons.map((c) => (
+                      <div key={c.id} style={{ padding: "0.5rem 0.65rem", borderRadius: "var(--radius-md)", background: "var(--color-bg-input)", fontSize: "0.82rem" }}>
+                        <div className="d-flex justify-content-between align-items-center mb-1">
+                          <span style={{ color: "var(--color-crimson)", fontWeight: 700, fontFamily: "monospace" }}>{c.code}</span>
+                          <button className="btn-gold" style={{ fontSize: "0.72rem", padding: "0.2rem 0.6rem" }}
+                            disabled={isApplyingCoupon} onClick={() => handleApplyCoupon(c.code)}>
+                            {isApplyingCoupon ? <span className="spinner-border spinner-border-sm" role="status"></span> : "Apply"}
+                          </button>
+                        </div>
+                        <div style={{ color: "var(--color-text-muted)", fontSize: "0.75rem" }}>
+                          {c.discount}% off{c.max_discount ? ` (max ₹${c.max_discount})` : ""}
+                          {c.minimum_order_amount > 0 ? ` · Min order ₹${c.minimum_order_amount}` : ""}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <hr style={{ borderColor: "var(--color-border)" }} />
+              <div className="d-flex justify-content-between mb-2">
+                <span className="text-royal-muted">Created</span>
+                <span style={{ color: "var(--color-text-primary)", fontSize: "0.8rem" }}>
+                  {order.created_at ? new Date(order.created_at).toLocaleString() : "—"}
+                </span>
+              </div>
+              <div className="d-flex justify-content-between mb-2">
+                <span className="text-royal-muted">Updated</span>
+                <span style={{ color: "var(--color-text-primary)", fontSize: "0.8rem" }}>
+                  {order.updated_at ? new Date(order.updated_at).toLocaleString() : "—"}
+                </span>
+              </div>
+
               {editingAll && (
                 <div className="d-flex gap-2 mt-3">
                   <button className="btn-gold" onClick={saveAll} disabled={isSavingAll}>
@@ -367,21 +463,25 @@ export default function OrderDetails() {
                 </div>
               )}
 
-              {/* Action Buttons */}
               {!editingAll && (
                 <>
                   <hr style={{ borderColor: "var(--color-border)" }} />
                   <div className="d-flex flex-column gap-2">
-                    {status === "awaiting_token_payment" && (
+                    {order.is_editable_by_client && (
+                      <button className="btn-outline-gold w-100" onClick={startEditAll}>
+                        <i className="fa-solid fa-pen me-2"></i>Update Order
+                      </button>
+                    )}
+                    {order.token_amount > 0 && order.payment_status !== "paid" && (
                       <button className="btn-gold w-100"
                         onClick={() => navigate(`/dashboard/payment/${orderId}?type=token`)}>
-                        <i className="fa-solid fa-coins me-2"></i>Pay Token (30%)
+                        <i className="fa-solid fa-coins me-2"></i>Pay Token (₹{order.token_amount})
                       </button>
                     )}
                     {status === "awaiting_final_payment" && (
                       <button className="btn-gold w-100"
                         onClick={() => navigate(`/dashboard/payment/${orderId}?type=final`)}>
-                        <i className="fa-solid fa-credit-card me-2"></i>Pay Final (70%)
+                        <i className="fa-solid fa-credit-card me-2"></i>Pay Final (₹{order.remaining_amount})
                       </button>
                     )}
                     {status === "preview_submitted" && (
@@ -653,6 +753,39 @@ export default function OrderDetails() {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ─── Uploaded Files ─── */}
+          {order.files && order.files.length > 0 && (
+            <div className="card-royal p-4 mb-4">
+              <h6 style={{ color: "var(--color-text-primary)", fontWeight: 700, marginBottom: "0.75rem" }}>
+                <i className="fa-solid fa-paperclip me-2" style={{ color: "var(--color-crimson)" }}></i>Uploaded Files
+              </h6>
+              <div className="d-flex flex-column gap-2">
+                {order.files.map((f) => (
+                  <div key={f.id} className="d-flex align-items-center justify-content-between"
+                    style={{ padding: "0.5rem 0.75rem", borderRadius: "var(--radius-md)", background: "var(--color-bg-input)", fontSize: "0.85rem" }}>
+                    <div className="d-flex align-items-center gap-2" style={{ minWidth: 0, flex: 1 }}>
+                      <i className="fa-solid fa-file" style={{ color: "var(--color-text-muted)", flexShrink: 0 }}></i>
+                      <span style={{ color: "var(--color-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {f.file.split("/").pop()}
+                      </span>
+                    </div>
+                    <div className="d-flex align-items-center gap-3" style={{ flexShrink: 0 }}>
+                      <span className="badge-confirmed" style={{ fontSize: "0.72rem", textTransform: "capitalize" }}>
+                        {f.file_type?.replace(/_/g, " ")}
+                      </span>
+                      <span style={{ color: "var(--color-text-muted)", fontSize: "0.75rem" }}>
+                        v{f.version}
+                      </span>
+                      <span style={{ color: "var(--color-text-muted)", fontSize: "0.75rem" }}>
+                        {f.uploaded_at ? new Date(f.uploaded_at).toLocaleDateString() : ""}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

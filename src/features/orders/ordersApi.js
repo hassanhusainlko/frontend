@@ -84,6 +84,25 @@ export const ordersApi = createApi({
       },
     }),
 
+    // POST /orders/orders/create-with-details/
+    createOrderWithDetails: builder.mutation({
+      query: (body) => ({
+        url: "/orders/orders/create-with-details/",
+        method: "POST",
+        body,
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: [{ type: "Orders", id: "LIST" }],
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(addOrder(data));
+        } catch (err) {
+          console.error("Failed to create order with details:", err);
+        }
+      },
+    }),
+
     // POST /orders/orders/{id}/upload-file/
     uploadOrderFile: builder.mutation({
       query: ({ orderId, file, file_type = "client_main_file" }) => {
@@ -110,6 +129,30 @@ export const ordersApi = createApi({
         headers: { "Content-Type": "application/json" },
       }),
       invalidatesTags: (result, error, { orderId }) => [
+        { type: "Orders", id: orderId },
+      ],
+    }),
+
+    // POST /orders/orders/{id}/apply-coupon/
+    applyCoupon: builder.mutation({
+      query: ({ orderId, code }) => ({
+        url: `/orders/orders/${orderId}/apply-coupon/`,
+        method: "POST",
+        body: { code },
+        headers: { "Content-Type": "application/json" },
+      }),
+      invalidatesTags: (result, error, { orderId }) => [
+        { type: "Orders", id: orderId },
+      ],
+    }),
+
+    // POST /orders/orders/{id}/remove-coupon/
+    removeCoupon: builder.mutation({
+      query: (orderId) => ({
+        url: `/orders/orders/${orderId}/remove-coupon/`,
+        method: "POST",
+      }),
+      invalidatesTags: (result, error, orderId) => [
         { type: "Orders", id: orderId },
       ],
     }),
@@ -150,8 +193,11 @@ export const {
   useGetOrdersQuery,
   useGetOrderQuery,
   useCreateOrderMutation,
+  useCreateOrderWithDetailsMutation,
   useUploadOrderFileMutation,
   useRequestRevisionMutation,
+  useApplyCouponMutation,
+  useRemoveCouponMutation,
   useApprovePreviewMutation,
   useGetStatusHistoryQuery,
   useUpdateOrderDetailsMutation,

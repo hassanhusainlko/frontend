@@ -6,6 +6,7 @@ import OrderTypeButtons from "./components/OrderTypeButtons";
 import OrdersList from "./components/OrdersList";
 import { useLazyGetProfileQuery } from "../profile/profileApi";
 import { useGetOrdersQuery } from "../orders/ordersApi";
+import { useGetMyCouponsQuery } from "../coupons/couponsApi";
 import "../../styles/variables.css";
 
 function StatCard({ icon, label, value, bg, iconColor }) {
@@ -34,6 +35,7 @@ export default function Dashboard() {
   const [triggerGetProfile] = useLazyGetProfileQuery();
   const location = useLocation();
   const { data: orders = [] } = useGetOrdersQuery();
+  const { data: coupons = [] } = useGetMyCouponsQuery();
 
   useEffect(() => {
     triggerGetProfile();
@@ -100,6 +102,34 @@ export default function Dashboard() {
           <div className="col-12 col-lg-8 col-xl-9">
             <QuoteGenerator />
             <OrderTypeButtons />
+
+            {coupons.length > 0 && (
+              <div className="card-royal p-4 mb-4">
+                <h6 style={{ color: "var(--color-text-primary)", fontWeight: 700, marginBottom: "0.75rem" }}>
+                  <i className="fa-solid fa-tag me-2" style={{ color: "var(--color-crimson)" }}></i>My Coupons
+                </h6>
+                <div className="row g-3">
+                  {coupons.map((c) => (
+                    <div key={c.id} className="col-12 col-sm-6 col-lg-4">
+                      <div style={{ padding: "0.75rem", borderRadius: "var(--radius-md)", background: "var(--color-bg-input)", border: "1px dashed var(--color-border)", height: "100%" }}>
+                        <div className="d-flex align-items-center justify-content-between mb-2">
+                          <span style={{ color: "var(--color-crimson)", fontWeight: 700, fontFamily: "monospace", fontSize: "0.95rem" }}>{c.code}</span>
+                          <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)", textTransform: "capitalize" }}>{c.coupon_type}</span>
+                        </div>
+                        <div style={{ fontSize: "0.82rem", color: "var(--color-text-primary)", fontWeight: 600, marginBottom: "0.25rem" }}>
+                          {c.discount}% Off
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                          {c.max_discount ? `Max discount ₹${c.max_discount}` : "No max limit"}
+                          {c.minimum_order_amount > 0 ? ` · Min order ₹${c.minimum_order_amount}` : ""}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="row g-3">
               <div className="col-12">
                 <OrdersList
