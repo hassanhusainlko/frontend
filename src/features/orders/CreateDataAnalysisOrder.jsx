@@ -69,8 +69,9 @@ export default function CreateDataAnalysisOrder() {
   const [createOrderWithDetails, { isLoading: isCreating }] = useCreateOrderWithDetailsMutation();
 
   useEffect(() => {
-    if (urlOrderId) {
-      setOrderId(Number(urlOrderId));
+    const parsed = Number(urlOrderId);
+    if (Number.isInteger(parsed) && parsed > 0) {
+      setOrderId(parsed);
       setStep(2);
     }
   }, [urlOrderId]);
@@ -99,8 +100,10 @@ export default function CreateDataAnalysisOrder() {
         review_of_literature: details.review_of_literature,
         managing_references: details.managing_references,
       }).unwrap();
-      setOrderId(result.id);
-      window.history.replaceState(null, "", `/orders/create-data-analysis/${result.id}`);
+      const newId = result.order_id ?? result.id;
+      if (newId == null) throw new Error("Order created but no id was returned.");
+      setOrderId(newId);
+      window.history.replaceState(null, "", `/orders/create-data-analysis/${newId}`);
       setStep(2);
     } catch (err) {
       setError(err?.data?.detail || err?.data?.message || err?.message || "Failed to create order.");

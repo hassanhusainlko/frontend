@@ -66,8 +66,9 @@ export default function CreateLatexOrder() {
   const [createOrderWithDetails, { isLoading: isCreating }] = useCreateOrderWithDetailsMutation();
 
   useEffect(() => {
-    if (urlOrderId) {
-      setOrderId(Number(urlOrderId));
+    const parsed = Number(urlOrderId);
+    if (Number.isInteger(parsed) && parsed > 0) {
+      setOrderId(parsed);
       setStep(2);
     }
   }, [urlOrderId]);
@@ -90,8 +91,10 @@ export default function CreateLatexOrder() {
         figures_tables_count: Number(details.figures_tables_count) || 0,
         special_instructions: details.special_instructions,
       }).unwrap();
-      setOrderId(result.id);
-      window.history.replaceState(null, "", `/orders/create-latex/${result.id}`);
+      const newId = result.order_id ?? result.id;
+      if (newId == null) throw new Error("Order created but no id was returned.");
+      setOrderId(newId);
+      window.history.replaceState(null, "", `/orders/create-latex/${newId}`);
       setStep(2);
     } catch (err) {
       setError(err?.data?.detail || err?.data?.message || err?.message || "Failed to create order.");

@@ -85,6 +85,9 @@ export const ordersApi = createApi({
     }),
 
     // POST /orders/orders/create-with-details/
+    // Response is a summary ({ order_id, service_category, status }), not a full
+    // order object, so it is not pushed into the list via addOrder. The LIST
+    // invalidation below triggers a refetch of getOrders with the real payload.
     createOrderWithDetails: builder.mutation({
       query: (body) => ({
         url: "/orders/orders/create-with-details/",
@@ -93,10 +96,9 @@ export const ordersApi = createApi({
         headers: { "Content-Type": "application/json" },
       }),
       invalidatesTags: [{ type: "Orders", id: "LIST" }],
-      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+      async onQueryStarted(arg, { queryFulfilled }) {
         try {
-          const { data } = await queryFulfilled;
-          dispatch(addOrder(data));
+          await queryFulfilled;
         } catch (err) {
           console.error("Failed to create order with details:", err);
         }
